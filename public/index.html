@@ -488,6 +488,39 @@
     </div>
 </div>
 
+<!-- MODAL XEM CHI TIẾT / XEM TRƯỚC CÂU HỎI TRẮC NGHIỆM -->
+<div class="modal fade" id="dynamicDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h6 class="modal-title fw-bold"><i class="fa-solid fa-eye me-2"></i>Bản Xem Trước Chi Tiết Câu Hỏi</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3 d-flex align-items-center gap-2">
+                    <span id="previewCategory" class="badge bg-secondary"></span>
+                    <span id="previewDifficulty" class="badge bg-info text-dark"></span>
+                </div>
+                
+                <h5 id="previewQuestion" class="fw-bold text-dark mb-3"></h5>
+
+                <div class="card p-3 mb-3 bg-light border">
+                    <h6 class="fw-bold text-secondary mb-2">Các phương án lựa chọn:</h6>
+                    <div id="previewOptionsList" class="d-flex flex-column gap-2"></div>
+                </div>
+
+                <div class="alert alert-success border-success">
+                    <h6 class="fw-bold text-success mb-1"><i class="fa-solid fa-lightbulb me-1"></i> Lời giải thích:</h6>
+                    <div id="previewExplanation" class="text-dark" style="white-space: pre-wrap;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL XEM CHI TIẾT BÀI VIẾT -->
 <div class="modal fade" id="detailModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -714,7 +747,7 @@
                                         <th>Cả 4 Đáp án</th>
                                         <th style="width: 130px;">Đáp án đúng</th>
                                         <th style="width: 200px;">Lời giải thích</th>
-                                        <th style="width: 110px;">Thao tác</th>
+                                        <th style="width: 140px;">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dyn_tbody_${item.id}">
@@ -1021,9 +1054,9 @@
                         <td><span class="badge bg-success">${optChar}: ${opts[correctAnsIdx] || ''}</span></td>
                         <td class="text-start text-muted" style="font-size: 11px;">${item.explanation || item.note || '-'}</td>
                         <td>
+                            <span class="action-link text-info" onclick='openDynamicDetailModal(${JSON.stringify(item)})'>Chi tiết</span>
                             ${hasPerm('edit') ? `<span class="action-link" onclick='editDynamicRow("${tabId}", ${JSON.stringify(item)})'>Sửa</span>` : ''}
                             ${hasPerm('delete') ? `<span class="action-link delete" onclick="deleteDynamicRow('${tabId}', '${item.id}')">Xóa</span>` : ''}
-                            ${!hasPerm('edit') && !hasPerm('delete') ? '<span class="text-muted" style="font-size: 10px;">Chỉ xem</span>' : ''}
                         </td>
                     </tr>
                 `;
@@ -1031,6 +1064,33 @@
         } catch (e) {
             console.error("Lỗi tải danh sách câu hỏi:", e);
         }
+    }
+
+    function openDynamicDetailModal(item) {
+        document.getElementById('previewCategory').innerText = item.category || 'Chung';
+        document.getElementById('previewDifficulty').innerText = item.difficulty || 'Dễ';
+        document.getElementById('previewQuestion').innerText = item.question || item.title || '';
+        
+        const opts = Array.isArray(item.options) ? item.options : [item.optionA || '', item.optionB || '', item.optionC || '', item.optionD || ''];
+        const correctIdx = parseInt(item.answer !== undefined ? item.answer : 0);
+        
+        const optLabels = ['A', 'B', 'C', 'D'];
+        let optsHtml = '';
+        
+        opts.forEach((optText, i) => {
+            const isCorrect = (i === correctIdx);
+            optsHtml += `
+                <div class="p-2 rounded border ${isCorrect ? 'bg-success text-white fw-bold' : 'bg-white text-dark'}">
+                    ${optLabels[i]}. ${optText} ${isCorrect ? '<i class="fa-solid fa-check ms-2"></i> (Đáp án đúng)' : ''}
+                </div>
+            `;
+        });
+        
+        document.getElementById('previewOptionsList').innerHTML = optsHtml;
+        document.getElementById('previewExplanation').innerText = item.explanation || item.note || 'Không có giải thích.';
+        
+        const modal = new bootstrap.Modal(document.getElementById('dynamicDetailModal'));
+        modal.show();
     }
 
     function openDynamicRowModal(tabId) {
