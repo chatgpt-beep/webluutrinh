@@ -44,7 +44,7 @@
         .admin-hover-btn:hover { background-color: var(--nav-hover); }
         .admin-dropdown-menu {
             display: none; position: absolute; top: 100%; right: 0; background: white;
-            min-width: 170px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 0 0 6px 6px; overflow: hidden; z-index: 1000;
+            min-width: 190px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 0 0 6px 6px; overflow: hidden; z-index: 1000;
         }
         .admin-dropdown-container:hover .admin-dropdown-menu { display: block; }
         .admin-dropdown-item { padding: 10px 16px; color: #333; text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; }
@@ -92,7 +92,6 @@
         }
         .content-block-item .block-img:hover { transform: scale(1.02); }
         .content-block-item .block-text { font-size: 13px; color: #333333; line-height: 1.6; white-space: pre-wrap; flex-grow: 1; }
-        .content-block-item .block-action { flex-shrink: 0; text-align: right; min-width: 80px; }
 
         .image-viewer-modal {
             display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
@@ -143,8 +142,15 @@
                 <i class="fa-solid fa-chevron-down ms-1" style="font-size: 10px;"></i>
             </div>
             <div class="admin-dropdown-menu">
-                <div class="admin-dropdown-item" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="fa-solid fa-key text-primary"></i> Đổi mật khẩu</div>
-                <div class="admin-dropdown-item text-danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</div>
+                <div class="admin-dropdown-item text-primary fw-bold" id="btnMenuCreateUser" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                    <i class="fa-solid fa-user-plus"></i> Tạo tài khoản mới
+                </div>
+                <div class="admin-dropdown-item" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    <i class="fa-solid fa-key text-secondary"></i> Đổi mật khẩu
+                </div>
+                <div class="admin-dropdown-item text-danger" onclick="handleLogout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                </div>
             </div>
         </div>
     </div>
@@ -244,6 +250,42 @@
     </div>
 </div>
 
+<!-- MODAL TẠO TÀI KHOẢN MỚI -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h6 class="modal-title fw-bold"><i class="fa-solid fa-user-plus me-2"></i>Tạo Tài Khoản Người Dùng Mới</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createUserForm" onsubmit="handleCreateUser(event)">
+                    <div id="createUserAlert" class="alert alert-danger py-2 d-none" style="font-size: 12px;"></div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên tài khoản (Username)</label>
+                        <input type="text" id="newUsername" class="form-control form-control-sm" placeholder="Nhập tên tài khoản..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mật khẩu</label>
+                        <input type="password" id="newPassword" class="form-control form-control-sm" placeholder="Nhập mật khẩu..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Quyền hạn (Role)</label>
+                        <select id="newRole" class="form-select form-select-sm" required>
+                            <option value="staff">Nhân viên (Staff - Bị ẩn tab Giao diện)</option>
+                            <option value="admin">Quản trị viên (Admin - Full quyền)</option>
+                        </select>
+                    </div>
+                    <div class="text-end mt-3">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-primary fw-bold"><i class="fa-solid fa-check me-1"></i>Tạo Tài Khoản</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL THÊM / SỬA CÂU HỎI TRẮC NGHIỆM CHI TIẾT -->
 <div class="modal fade" id="dynamicRowModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -319,7 +361,7 @@
 
                     <div class="mb-2">
                         <label class="form-label fw-bold text-primary"><i class="fa-solid fa-lightbulb me-1"></i> Lời giải thích / Đáp án chi tiết (Explanation)</label>
-                        <textarea id="dynExplanation" class="form-control form-control-sm" rows="3" placeholder="Nhập lời giải thích ngắn gọn lý do vì sao đáp án đó đúng..."></textarea>
+                        <textarea id="dynExplanation" class="form-control form-control-sm" rows="3" placeholder="Nhập lời giải thích ngắn gọn..."></textarea>
                     </div>
                 </form>
             </div>
@@ -454,9 +496,10 @@
     document.addEventListener("DOMContentLoaded", async () => {
         const token = localStorage.getItem("admin_token");
         const username = localStorage.getItem("admin_username");
+        const role = localStorage.getItem("admin_role") || "staff";
         if (token && username) {
             await fetchConfig();
-            showAdminDashboard(username);
+            showAdminDashboard(username, role);
         }
         document.addEventListener('keydown', (e) => { if (e.key === "Escape") closeImageViewer(); });
     });
@@ -481,11 +524,17 @@
 
     function renderNavbar() {
         const container = document.getElementById('topNavContainer');
-        let html = `
-            <div class="nav-item-btn ${activeTab === 'giaodien' ? 'active' : ''}" onclick="switchTab('giaodien')">
-                <i class="fa-solid fa-palette"></i><span>GIAO DIỆN</span>
-            </div>
-        `;
+        const role = localStorage.getItem("admin_role") || "staff";
+        let html = '';
+
+        // Chỉ Admin mới có tab GIAO DIỆN
+        if (role === 'admin') {
+            html += `
+                <div class="nav-item-btn ${activeTab === 'giaodien' ? 'active' : ''}" onclick="switchTab('giaodien')">
+                    <i class="fa-solid fa-palette"></i><span>GIAO DIỆN</span>
+                </div>
+            `;
+        }
 
         currentConfig.navItems.forEach(item => {
             html += `
@@ -553,6 +602,109 @@
         container.innerHTML = html;
     }
 
+    async function handleLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        const alertBox = document.getElementById('loginAlert');
+
+        const res = await fetch(`${API_URL}/admin/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            localStorage.setItem("admin_token", data.token);
+            localStorage.setItem("admin_username", data.username);
+            localStorage.setItem("admin_role", data.role || 'staff');
+            await fetchConfig();
+            showAdminDashboard(data.username, data.role || 'staff');
+        } else {
+            alertBox.innerText = data.message;
+            alertBox.classList.remove('d-none');
+        }
+    }
+
+    function showAdminDashboard(username, role) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminMainScreen').style.display = 'block';
+        
+        const displayRole = (role || localStorage.getItem("admin_role") || "staff").toUpperCase();
+        document.getElementById('displayAdminName').innerText = `${username.toUpperCase()} (${displayRole})`;
+        
+        // Cấu hình hiển thị nút Tạo tài khoản
+        const menuCreateUser = document.getElementById('btnMenuCreateUser');
+        if (menuCreateUser) {
+            menuCreateUser.style.display = (displayRole === 'ADMIN') ? 'flex' : 'none';
+        }
+
+        switchTab(displayRole === 'ADMIN' ? 'giaodien' : 'luutrinh');
+        loadDocs();
+    }
+
+    function handleLogout() {
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_username");
+        localStorage.removeItem("admin_role");
+        location.reload();
+    }
+
+    // Xử lý Tạo Tài Khoản Mới
+    async function handleCreateUser(e) {
+        e.preventDefault();
+        const username = document.getElementById('newUsername').value.trim();
+        const password = document.getElementById('newPassword').value;
+        const role = document.getElementById('newRole').value;
+        const alertBox = document.getElementById('createUserAlert');
+
+        try {
+            const res = await fetch(`${API_URL}/users`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, role })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Tạo tài khoản người dùng thành công!");
+                document.getElementById('createUserForm').reset();
+                alertBox.classList.add('d-none');
+                bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
+            } else {
+                alertBox.innerText = data.message;
+                alertBox.classList.remove('d-none');
+            }
+        } catch (err) {
+            alertBox.innerText = "Có lỗi xảy ra khi kết nối máy chủ!";
+            alertBox.classList.remove('d-none');
+        }
+    }
+
+    function switchTab(tabName) {
+        activeTab = tabName;
+        renderNavbar();
+        
+        const viewGiaoDien = document.getElementById('view-giaodien');
+        if (viewGiaoDien) viewGiaoDien.style.display = (tabName === 'giaodien') ? 'block' : 'none';
+        
+        const viewLuuTrinh = document.getElementById('view-luutrinh');
+        if (viewLuuTrinh) viewLuuTrinh.style.display = (tabName === 'luutrinh') ? 'block' : 'none';
+
+        currentConfig.navItems.forEach(item => {
+            if (item.id !== 'luutrinh') {
+                const el = document.getElementById(`view-${item.id}`);
+                if (el) {
+                    el.style.display = (tabName === item.id) ? 'block' : 'none';
+                    if (tabName === item.id && (item.type === 'table' || item.id === 'test')) {
+                        loadDynamicTableData(item.id);
+                    }
+                }
+            }
+        });
+    }
+
     async function handleImportJson(event, tabId) {
         const file = event.target.files[0];
         if (!file) return;
@@ -561,7 +713,6 @@
         reader.onload = async (e) => {
             try {
                 const jsonData = JSON.parse(e.target.result);
-
                 if (!Array.isArray(jsonData)) {
                     alert("File JSON không hợp lệ! Cấu trúc phải là một mảng [] danh sách các câu hỏi.");
                     return;
@@ -819,64 +970,6 @@
             }
         };
         reader.readAsDataURL(file);
-    }
-
-    async function handleLogin(e) {
-        e.preventDefault();
-        const username = document.getElementById('loginUsername').value;
-        const password = document.getElementById('loginPassword').value;
-        const alertBox = document.getElementById('loginAlert');
-
-        const res = await fetch(`${API_URL}/admin/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            localStorage.setItem("admin_token", data.token);
-            localStorage.setItem("admin_username", data.username);
-            await fetchConfig();
-            showAdminDashboard(data.username);
-        } else {
-            alertBox.innerText = data.message;
-            alertBox.classList.remove('d-none');
-        }
-    }
-
-    function showAdminDashboard(username) {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('adminMainScreen').style.display = 'block';
-        document.getElementById('displayAdminName').innerText = username.toUpperCase();
-        switchTab('luutrinh');
-        loadDocs();
-    }
-
-    function handleLogout() {
-        localStorage.removeItem("admin_token");
-        localStorage.removeItem("admin_username");
-        location.reload();
-    }
-
-    function switchTab(tabName) {
-        activeTab = tabName;
-        renderNavbar();
-        
-        document.getElementById('view-giaodien').style.display = (tabName === 'giaodien') ? 'block' : 'none';
-        document.getElementById('view-luutrinh').style.display = (tabName === 'luutrinh') ? 'block' : 'none';
-
-        currentConfig.navItems.forEach(item => {
-            if (item.id !== 'luutrinh') {
-                const el = document.getElementById(`view-${item.id}`);
-                if (el) {
-                    el.style.display = (tabName === item.id) ? 'block' : 'none';
-                    if (tabName === item.id && (item.type === 'table' || item.id === 'test')) {
-                        loadDynamicTableData(item.id);
-                    }
-                }
-            }
-        });
     }
 
     async function loadDocs() {

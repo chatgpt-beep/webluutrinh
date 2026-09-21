@@ -15,12 +15,19 @@ if (!fs.existsSync(UPLOADS_DIR)) {
     fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-// Đường dẫn lưu trữ file dữ liệu quiz & dữ liệu hệ thống (sử dụng đường dẫn tương đối an toàn)
+// Đường dẫn lưu trữ file dữ liệu quiz & dữ liệu hệ thống
 const ABSOLUTE_QUIZ_FILE = path.join(__dirname, 'public', 'sports_quiz_100.json');
 const DATA_FILE = path.join(__dirname, 'data.json');
 const DYNAMIC_TABLES_FILE = path.join(__dirname, 'dynamic_tables.json');
 const CONFIG_FILE = path.join(__dirname, 'layout-config.json');
 const QUIZ_HTML_FILE = path.join(__dirname, 'public', 'quiz_client.html');
+const USERS_FILE = path.join(__dirname, 'users.json');
+
+// Cấu hình danh sách người dùng mặc định
+const DEFAULT_USERS = [
+    { username: "hiload88", password: "long1995", role: "admin", name: "HILOAD88" },
+    { username: "nhanvien1", password: "123", role: "staff", name: "Nhân Viên 1" }
+];
 
 // Cấu hình mặc định hệ thống
 const DEFAULT_CONFIG = {
@@ -91,7 +98,7 @@ function writeJsonFile(filePath, data) {
 let docsData = readJsonFile(DATA_FILE, []);
 let dynamicTablesData = readJsonFile(DYNAMIC_TABLES_FILE, {});
 let layoutConfig = readJsonFile(CONFIG_FILE, DEFAULT_CONFIG);
-let adminUser = { username: "hiload88", password: "long1995" };
+let usersData = readJsonFile(USERS_FILE, DEFAULT_USERS);
 
 // Điều hướng trang tĩnh
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
@@ -105,10 +112,73 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'client.h
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* =========================================================
-   1. API QUẢN LÝ DỮ LIỆU CÂU HỎI & GIAO DIỆN TRẮC NGHIỆM (QUIZ)
+   1. API QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG & ĐĂNG NHẬP
    ========================================================= */
 
-// API tương thích cho lấy danh sách câu hỏi Quiz
+// API Đăng nhập
+app.post('/api/admin/login', (req, res) => {
+    const { username, password } = req.body;
+    const user = usersData.find(u => u.username === username && u.password === password);
+    
+    if (user) {
+        return res.json({ 
+            success: true, 
+            username: user.username, 
+            role: user.role || 'staff',
+            token: "mock-token-" + Date.now() 
+        });
+    }
+    return res.json({ success: false, message: "Tài khoản hoặc mật khẩu không chính xác!" });
+});
+
+// API Đổi mật khẩu
+app.post('/api/admin/change-password', (req, res) => {
+    const { username, oldPassword, newPassword } = req.body;
+    const userIndex = usersData.findIndex(u => u.username === username && u.password === oldPassword);
+    
+    if (userIndex !== -1) {
+        usersData[userIndex].password = newPassword;
+        writeJsonFile(USERS_FILE, usersData);
+        return res.json({ success: true, message: "Đổi mật khẩu thành công!" });
+    }
+    return res.json({ success: false, message: "Mật khẩu cũ không chính xác!" });
+});
+
+// API Lấy danh sách người dùng
+app.get('/api/users', (req, res) => {
+    res.json(usersData.map(u => ({ username: u.username, role: u.role, name: u.name || u.username })));
+});
+
+// API Tạo / Cập nhật tài khoản người dùng
+app.post('/api/users', (req, res) => {
+    const { username, password, role } = req.body;
+
+    if (!username || !password) {
+        return res.json({ success: false, message: "Vui lòng nhập Tên tài khoản và Mật khẩu!" });
+    }
+
+    const existingUser = usersData.find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (existingUser) {
+        return res.json({ success: false, message: "Tên tài khoản này đã tồn tại trên hệ thống!" });
+    }
+
+    const newUser = {
+        username: username,
+        password: password,
+        role: role || 'staff',
+        name: username
+    };
+
+    usersData.push(newUser);
+    writeJsonFile(USERS_FILE, usersData);
+
+    return res.json({ success: true, message: "Tạo tài khoản mới thành công!" });
+});
+
+/* =========================================================
+   2. API QUẢN LÝ DỮ LIỆU CÂU HỎI & GIAO DIỆN TRẮC NGHIỆM (QUIZ)
+   ========================================================= */
+
 app.get('/api/questions', (req, res) => {
     const quizData = readJsonFile(ABSOLUTE_QUIZ_FILE, []);
     res.json(quizData);
@@ -119,7 +189,6 @@ app.get('/api/sports-quiz', (req, res) => {
     res.json(quizData);
 });
 
-// API Cập nhật/Ghi trực tiếp file dữ liệu sports_quiz_100.json
 app.post('/api/sports-quiz/update-json', (req, res) => {
     try {
         const { rawJson } = req.body;
@@ -132,7 +201,6 @@ app.post('/api/sports-quiz/update-json', (req, res) => {
     }
 });
 
-// API Lưu trực tiếp Mã Code HTML/JS của trang Quiz từ Admin Web ra file quiz_client.html
 app.post('/api/sports-quiz/update-html', (req, res) => {
     try {
         const { htmlContent } = req.body;
@@ -147,7 +215,6 @@ app.post('/api/sports-quiz/update-html', (req, res) => {
     }
 });
 
-// API lấy mã nguồn HTML hiện tại của trang Quiz lên Admin
 app.get('/api/sports-quiz/get-html', (req, res) => {
     if (fs.existsSync(QUIZ_HTML_FILE)) {
         const content = fs.readFileSync(QUIZ_HTML_FILE, 'utf8');
@@ -157,10 +224,9 @@ app.get('/api/sports-quiz/get-html', (req, res) => {
 });
 
 /* =========================================================
-   2. API BẢNG DANH SÁCH ĐỘNG & IMPORT JSON BẢO LƯU FILE
+   3. API BẢNG DANH SÁCH ĐỘNG & IMPORT JSON BẢO LƯU FILE
    ========================================================= */
 
-// API Lấy dữ liệu bảng động
 app.get('/api/dynamic-table/:tabId', (req, res) => {
     const { tabId } = req.params;
     if (tabId === 'test' || tabId === 'quiz' || tabId === 'sports_quiz' || tabId === 'testsanpham') {
@@ -170,7 +236,6 @@ app.get('/api/dynamic-table/:tabId', (req, res) => {
     res.json(dynamicTablesData[tabId] || []);
 });
 
-// API Import hàng loạt từ file JSON đẩy lên
 app.post('/api/dynamic-table/:tabId/import', (req, res) => {
     try {
         const { tabId } = req.params;
@@ -208,7 +273,6 @@ app.post('/api/dynamic-table/:tabId/import', (req, res) => {
     }
 });
 
-// API Thêm mới / Cập nhật 1 câu hỏi
 app.post('/api/dynamic-table/:tabId', (req, res) => {
     const { tabId } = req.params;
     const rowItem = req.body;
@@ -239,7 +303,6 @@ app.post('/api/dynamic-table/:tabId', (req, res) => {
     res.json({ success: true, message: "Đã cập nhật dữ liệu thành công!" });
 });
 
-// API Xóa 1 câu hỏi
 app.delete('/api/dynamic-table/:tabId/:rowId', (req, res) => {
     const { tabId, rowId } = req.params;
 
@@ -265,7 +328,7 @@ app.delete('/api/dynamic-table/:tabId/:rowId', (req, res) => {
 });
 
 /* =========================================================
-   3. API HỆ THỐNG TÙY CHỈNH GIAO DIỆN & HỆ THỐNG CHUNG
+   4. API HỆ THỐNG TÙY CHỈNH GIAO DIỆN & LƯU TRÌNH BÀI VIẾT
    ========================================================= */
 
 app.get('/api/layout-config', (req, res) => res.json(layoutConfig));
@@ -282,23 +345,6 @@ app.post('/api/layout-config', (req, res) => {
     }
 
     res.json({ success: true, message: "Đã lưu tất cả tùy chỉnh giao diện!" });
-});
-
-app.post('/api/admin/login', (req, res) => {
-    const { username, password } = req.body;
-    if (username === adminUser.username && password === adminUser.password) {
-        return res.json({ success: true, username: adminUser.username, token: "mock-token-12345" });
-    }
-    return res.json({ success: false, message: "Tài khoản hoặc mật khẩu không chính xác!" });
-});
-
-app.post('/api/admin/change-password', (req, res) => {
-    const { username, oldPassword, newPassword } = req.body;
-    if (username === adminUser.username && oldPassword === adminUser.password) {
-        adminUser.password = newPassword;
-        return res.json({ success: true, message: "Đổi mật khẩu thành công!" });
-    }
-    return res.json({ success: false, message: "Mật khẩu cũ không chính xác!" });
 });
 
 app.post('/api/upload-bg-image', (req, res) => {
@@ -318,26 +364,6 @@ app.post('/api/upload-bg-image', (req, res) => {
         res.json({ success: true, url: `/uploads/${fileName}` });
     } catch (err) {
         res.status(500).json({ success: false, message: "Lỗi lưu ảnh nền!" });
-    }
-});
-
-app.post('/api/upload-pasted-image', (req, res) => {
-    const { imageBase64 } = req.body;
-    if (!imageBase64) return res.status(400).json({ success: false, message: "Không có dữ liệu ảnh!" });
-
-    try {
-        const matches = imageBase64.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
-        if (!matches) return res.status(400).json({ success: false, message: "Định dạng không hợp lệ!" });
-
-        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
-        const buffer = Buffer.from(matches[2], 'base64');
-        const fileName = `img_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
-        const filePath = path.join(UPLOADS_DIR, fileName);
-
-        fs.writeFileSync(filePath, buffer);
-        res.json({ success: true, url: `/uploads/${fileName}` });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Lỗi lưu ảnh!" });
     }
 });
 
