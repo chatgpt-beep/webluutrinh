@@ -160,7 +160,7 @@
     </div>
 
     <div class="content-body">
-        <!-- TAB GIAO DIỆN (YÊU CẦU QUYỀN config_ui TRÊN BACKEND) -->
+        <!-- TAB GIAO DIỆN -->
         <div id="view-giaodien" style="display: none;">
             <div class="card p-3 mb-3 shadow-sm">
                 <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-palette me-2"></i>1. Tùy Chỉnh Nền & Màu Sắc Frontend</h6>
@@ -223,7 +223,7 @@
             <button class="btn btn-primary fw-bold px-4" onclick="saveLayoutConfig()"><i class="fa-solid fa-floppy-disk me-1"></i>LƯU TẤT CẢ TÙY CHỈNH GIAO DIỆN</button>
         </div>
 
-        <!-- TAB LƯU TRÌNH (CẤU TRÚC 1) -->
+        <!-- TAB LƯU TRÌNH -->
         <div id="view-luutrinh" style="display: none;">
             <div class="action-bar">
                 <button class="btn btn-sm btn-primary btn-perm-add_new" onclick="openDocModal()"><i class="fa-solid fa-plus me-1"></i>Thêm bài viết lưu trình mới</button>
@@ -241,7 +241,7 @@
                             <th style="width: 180px;">Thư mục</th>
                             <th>Tóm tắt nội dung</th>
                             <th style="width: 110px;">Trạng Thái</th>
-                            <th style="width: 180px;">Thao tác</th>
+                            <th style="width: 200px;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="docTableBody"></tbody>
@@ -254,7 +254,7 @@
     </div>
 </div>
 
-<!-- MODAL QUẢN LÝ DANH SÁCH TÀI KHOẢN CẤP DƯỚI (DÀNH CHO HILOAD88) -->
+<!-- MODAL QUẢN LÝ DANH SÁCH TÀI KHOẢN CẤP DƯỚI -->
 <div class="modal fade" id="userListModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -281,7 +281,7 @@
     </div>
 </div>
 
-<!-- MODAL SỬA TÀI KHOẢN & PHÂN QUYỀN (HILOAD88) -->
+<!-- MODAL SỬA TÀI KHOẢN & PHÂN QUYỀN -->
 <div class="modal fade" id="editUserModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -341,7 +341,7 @@
     </div>
 </div>
 
-<!-- MODAL TẠO TÀI KHOẢN MỚI CHỈ DÀNH CHO HILOAD88 NÂNG CẤP CHI TIẾT QUYỀN -->
+<!-- MODAL TẠO TÀI KHOẢN MỚI -->
 <div class="modal fade" id="createUserModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -521,7 +521,7 @@
     </div>
 </div>
 
-<!-- MODAL XEM CHI TIẾT BÀI VIẾT -->
+<!-- MODAL XEM CHI TIẾT BÀI VIẾT LƯU TRÌNH -->
 <div class="modal fade" id="detailModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
@@ -614,7 +614,7 @@
     let rawDocsData = [];
     let cachedUsersList = [];
     let selectedFolder = '';
-    let userPermissions = []; // Mảng danh sách quyền của tài khoản hiện tại
+    let userPermissions = [];
     let currentConfig = {
         theme: { bgType: 'color', bgColor: '#f4f6f9', bgUrl: '', primaryColor: '#1677ff', customCss: '' },
         navItems: [
@@ -818,9 +818,7 @@
         location.reload();
     }
 
-    /* =========================================================
-       QUẢN LÝ TÀI KHOẢN DÀNH CHO HILOAD88
-       ========================================================= */
+    /* QUẢN LÝ TÀI KHOẢN DÀNH CHO HILOAD88 */
 
     async function openUserListModal() {
         try {
@@ -953,9 +951,7 @@
         }
     }
 
-    /* =========================================================
-       XỬ LÝ CHUYỂN TAB & DỮ LIỆU
-       ========================================================= */
+    /* XỬ LÝ CHUYỂN TAB & DỮ LIỆU */
 
     function switchTab(tabName) {
         activeTab = tabName;
@@ -1346,10 +1342,10 @@
                     <span class="badge ${item.IsHidden ? 'bg-danger' : 'bg-success'}">${item.IsHidden ? 'Đang Ẩn' : 'Hiển Thị'}</span>
                 </td>
                 <td>
+                    <span class="action-link text-info" onclick='openDetailModal(${JSON.stringify(item)})'>Chi tiết</span>
                     ${hasPerm('edit') ? `<span class="action-link" onclick='openDocModal(${JSON.stringify(item)})'>Sửa</span>` : ''}
                     ${hasPerm('toggle_hide') ? `<span class="action-link ${item.IsHidden ? 'toggle-show' : 'toggle-hide'}" onclick="toggleHideDoc('${item.ID}')">${item.IsHidden ? 'Hiện' : 'Ẩn'}</span>` : ''}
                     ${hasPerm('delete') ? `<span class="action-link delete" onclick="deleteDoc('${item.ID}')">Xóa</span>` : ''}
-                    ${!hasPerm('edit') && !hasPerm('toggle_hide') && !hasPerm('delete') ? '<span class="text-muted" style="font-size: 10px;">Chỉ xem</span>' : ''}
                 </td>
             </tr>
         `).join('');
