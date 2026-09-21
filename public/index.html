@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trung Tâm Quản Trị Hệ Thống AD88</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --nav-blue: #1677ff;
+            --nav-hover: #4096ff;
+            --nav-active: #0958d9;
+            --table-border: #f0f0f0;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f4f6f9; font-size: 13px; margin: 0; }
+        
+        #loginScreen {
+            min-height: 100vh; background: linear-gradient(135deg, #1677ff 0%, #001529 100%);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-card { width: 380px; padding: 30px; border-radius: 8px; background: white; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+
+        .sys-navbar {
+            background-color: var(--nav-blue); height: 60px;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: relative;
+        }
+        .sys-logo { color: white; font-weight: bold; font-size: 16px; white-space: nowrap; }
+
+        .sys-nav-center { display: flex; align-items: center; justify-content: center; height: 100%; gap: 2px; }
+        .nav-item-btn {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: rgba(255, 255, 255, 0.85); text-decoration: none; padding: 0 22px; height: 100%;
+            cursor: pointer; transition: background 0.2s, color 0.2s; user-select: none;
+        }
+        .nav-item-btn i { font-size: 18px; margin-bottom: 3px; }
+        .nav-item-btn span { font-size: 12px; font-weight: 500; }
+        .nav-item-btn:hover { background-color: var(--nav-hover); color: #ffffff; }
+        .nav-item-btn.active { background-color: var(--nav-active); color: #ffffff; font-weight: bold; box-shadow: inset 0 -3px 0 #fff; }
+
+        .admin-dropdown-container { position: relative; height: 100%; display: flex; align-items: center; }
+        .admin-hover-btn { color: white; font-weight: 600; padding: 0 15px; height: 100%; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .admin-hover-btn:hover { background-color: var(--nav-hover); }
+        .admin-dropdown-menu {
+            display: none; position: absolute; top: 100%; right: 0; background: white;
+            min-width: 170px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 0 0 6px 6px; overflow: hidden; z-index: 1000;
+        }
+        .admin-dropdown-container:hover .admin-dropdown-menu { display: block; }
+        .admin-dropdown-item { padding: 10px 16px; color: #333; text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; }
+        .admin-dropdown-item:hover { background-color: #f5f5f5; color: var(--nav-blue); }
+
+        .folder-nav-bar {
+            background-color: #ffffff; border-bottom: 2px solid var(--nav-blue); padding: 8px 16px;
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+        }
+        .folder-tab-btn {
+            background: #f5f5f5; border: 1px solid #d9d9d9; padding: 6px 14px; border-radius: 4px;
+            color: #595959; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+            text-transform: uppercase; font-size: 11px;
+        }
+        .folder-tab-btn:hover { background: #e6f7ff; border-color: #91d5ff; color: var(--nav-blue); }
+        .folder-tab-btn.active { background: var(--nav-blue); border-color: var(--nav-blue); color: #ffffff; font-weight: 600; }
+
+        .content-body { padding: 16px; }
+        .action-bar { background: white; padding: 10px 16px; border-bottom: 1px solid var(--table-border); display: flex; align-items: center; gap: 10px; }
+        .custom-table-container { background: white; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .table-custom { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .table-custom th { background: #fafafa; border: 1px solid var(--table-border); padding: 8px; font-weight: 600; text-align: center; color: #595959; }
+        .table-custom td { border: 1px solid var(--table-border); padding: 8px; text-align: center; vertical-align: middle; }
+        .table-custom tbody tr:hover { background: #e6f7ff; }
+
+        .action-link { color: var(--nav-blue); text-decoration: underline; cursor: pointer; margin: 0 4px; font-size: 12px; font-weight: 500; }
+        .action-link:hover { color: #0958d9; }
+        .action-link.delete { color: #ff4d4f; }
+        .action-link.delete:hover { color: #cf1322; }
+        .action-link.toggle-hide { color: #fa8c16; }
+        .action-link.toggle-hide:hover { color: #d46b08; }
+        .action-link.toggle-show { color: #52c41a; }
+        .action-link.toggle-show:hover { color: #389e0d; }
+
+        .clickable-title { color: var(--nav-blue); cursor: pointer; font-weight: bold; }
+        .clickable-title:hover { text-decoration: underline; color: #0958d9; }
+
+        .content-block-item { 
+            background: #ffffff; padding: 16px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #e8e8e8; 
+            display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .content-block-item .block-img { 
+            width: 280px; max-height: 220px; object-fit: cover; border-radius: 4px; cursor: pointer; 
+            border: 1px solid #d9d9d9; flex-shrink: 0; transition: transform 0.2s ease;
+        }
+        .content-block-item .block-img:hover { transform: scale(1.02); }
+        .content-block-item .block-text { font-size: 13px; color: #333333; line-height: 1.6; white-space: pre-wrap; flex-grow: 1; }
+        .content-block-item .block-action { flex-shrink: 0; text-align: right; min-width: 80px; }
+
+        .image-viewer-modal {
+            display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); align-items: center; justify-content: center;
+        }
+        .image-viewer-modal.active { display: flex; }
+        .image-viewer-content { max-width: 90%; max-height: 90%; border-radius: 6px; box-shadow: 0 5px 25px rgba(0,0,0,0.5); object-fit: contain; }
+        .image-viewer-close { position: absolute; top: 20px; right: 35px; color: #fff; font-size: 35px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<!-- MÀN HÌNH ĐĂNG NHẬP -->
+<div id="loginScreen">
+    <div class="login-card">
+        <h4 class="text-center font-weight-bold mb-4 text-primary"><i class="fa-solid fa-shield-halved me-2"></i>AD88 BACKEND</h4>
+        <div id="loginAlert" class="alert alert-danger py-2 d-none" style="font-size: 12px;"></div>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="mb-3">
+                <label class="form-label text-muted">Tài khoản</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                    <input type="text" id="loginUsername" class="form-control" required value="hiload88">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">Mật khẩu</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                    <input type="password" id="loginPassword" class="form-control" required value="long1995">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2 mt-2">ĐĂNG NHẬP HỆ THỐNG</button>
+        </form>
+    </div>
+</div>
+
+<!-- GIAO DIỆN CHÍNH AD88 -->
+<div id="adminMainScreen" style="display: none;">
+    <div class="sys-navbar">
+        <div class="sys-logo"><i class="fa-solid fa-layer-group me-1"></i> AD88 SYSTEM</div>
+        <div class="sys-nav-center" id="topNavContainer"></div>
+
+        <div class="admin-dropdown-container">
+            <div class="admin-hover-btn">
+                <i class="fa-solid fa-circle-user fa-lg"></i>
+                <span id="displayAdminName">HILOAD88</span>
+                <i class="fa-solid fa-chevron-down ms-1" style="font-size: 10px;"></i>
+            </div>
+            <div class="admin-dropdown-menu">
+                <div class="admin-dropdown-item" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="fa-solid fa-key text-primary"></i> Đổi mật khẩu</div>
+                <div class="admin-dropdown-item text-danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-body">
+        <!-- TAB GIAO DIỆN -->
+        <div id="view-giaodien" style="display: none;">
+            <div class="card p-3 mb-3 shadow-sm">
+                <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-palette me-2"></i>1. Tùy Chỉnh Nền & Màu Sắc Frontend</h6>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Màu chủ đạo (Primary Color)</label>
+                        <input type="color" id="cfgPrimaryColor" class="form-control form-control-color w-100" value="#1677ff">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Kiểu Nền Web Frontend</label>
+                        <select id="cfgBgType" class="form-select form-select-sm" onchange="toggleBgInputs()">
+                            <option value="color">Màu nền đơn (Solid Color)</option>
+                            <option value="url">Đường dẫn URL ảnh</option>
+                            <option value="file">Tải ảnh lên từ máy tính</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="bgOptionColor">
+                        <label class="form-label fw-bold">Màu nền Web</label>
+                        <input type="color" id="cfgBgColor" class="form-control form-color w-100" value="#f4f6f9">
+                    </div>
+                    <div class="col-md-6 d-none" id="bgOptionUrl">
+                        <label class="form-label fw-bold">URL Hình Nền</label>
+                        <input type="text" id="cfgBgUrl" class="form-control form-control-sm" placeholder="https://example.com/bg.jpg">
+                    </div>
+                    <div class="col-md-6 d-none" id="bgOptionFile">
+                        <label class="form-label fw-bold">Chọn ảnh từ máy tính</label>
+                        <input type="file" id="cfgBgFile" class="form-control form-control-sm" accept="image/*" onchange="handleUploadBgFile(event)">
+                        <input type="hidden" id="cfgBgFileUploadedUrl">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold text-primary"><i class="fa-solid fa-code me-1"></i>Custom Code CSS Chung (Áp dụng toàn trang Frontend)</label>
+                        <textarea id="cfgCustomCss" class="form-control font-monospace" rows="4" placeholder="VD: .nav-item-btn { border-radius: 8px !important; }"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cấu hình Danh Mục Chính & Loại Cấu Trúc -->
+            <div class="card p-3 mb-3 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="fw-bold text-primary mb-0"><i class="fa-solid fa-bars me-2"></i>2. Quản Lý Mục Chính & Loại Cấu Trúc Giao Diện</h6>
+                    <button class="btn btn-sm btn-outline-primary" onclick="addNewNavItem()"><i class="fa-solid fa-plus me-1"></i>Thêm Mục Mới</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle text-center" style="font-size: 12px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 100px;">Mã ID</th>
+                                <th style="width: 150px;">Tên Hiển Thị</th>
+                                <th style="width: 180px;">Loại Cấu Trúc Giao Diện</th>
+                                <th style="width: 140px;">Icon (FontAwesome)</th>
+                                <th style="width: 220px;">Custom Code CSS (Riêng)</th>
+                                <th style="width: 80px;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="navItemsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <button class="btn btn-primary fw-bold px-4" onclick="saveLayoutConfig()"><i class="fa-solid fa-floppy-disk me-1"></i>LƯU TẤT CẢ TÙY CHỈNH GIAO DIỆN</button>
+        </div>
+
+        <!-- TAB LƯU TRÌNH (CẤU TRÚC 1) -->
+        <div id="view-luutrinh" style="display: none;">
+            <div class="action-bar">
+                <button class="btn btn-sm btn-primary" onclick="openDocModal()"><i class="fa-solid fa-plus me-1"></i>Thêm bài viết lưu trình mới</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="loadDocs()"><i class="fa-solid fa-rotate me-1"></i>Làm mới</button>
+            </div>
+
+            <div class="folder-nav-bar" id="folderContainer"></div>
+
+            <div class="custom-table-container">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th style="width: 140px;">ID</th>
+                            <th style="width: 220px;">Tiêu đề lưu trình</th>
+                            <th style="width: 180px;">Thư mục</th>
+                            <th>Tóm tắt nội dung</th>
+                            <th style="width: 110px;">Trạng Thái</th>
+                            <th style="width: 180px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="docTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CONTAINER CHO CÁC MỤC ĐỘNG -->
+        <div id="dynamicViewsContainer"></div>
+    </div>
+</div>
+
+<!-- MODAL THÊM / SỬA CÂU HỎI TRẮC NGHIỆM CHI TIẾT -->
+<div class="modal fade" id="dynamicRowModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h6 class="modal-title fw-bold" id="dynamicRowModalTitle"><i class="fa-solid fa-circle-question me-1"></i> Quản Lý Câu Hỏi & Lời Giải Thích</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dynamicRowForm">
+                    <input type="hidden" id="dynRowId">
+                    <input type="hidden" id="dynTabId">
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Chủ đề / Danh mục (Category)</label>
+                            <input type="text" id="dynCategory" class="form-control form-control-sm" placeholder="VD: Kèo Châu Á (Asian Handicap)" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Độ khó (Difficulty)</label>
+                            <select id="dynDifficulty" class="form-select form-select-sm">
+                                <option value="Dễ">Dễ</option>
+                                <option value="Trung bình">Trung bình</option>
+                                <option value="Khó">Khó</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-primary">Nội dung câu hỏi (Question)</label>
+                        <textarea id="dynQuestion" class="form-control form-control-sm" rows="2" placeholder="Nhập câu hỏi..." required></textarea>
+                    </div>
+
+                    <div class="card p-3 mb-3 bg-light border">
+                        <label class="form-label fw-bold text-dark mb-2"><i class="fa-solid fa-list-check me-1"></i> Danh sách 4 Đáp án lựa chọn (Options)</label>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text fw-bold">A</span>
+                                    <input type="text" id="opt_0" class="form-control" placeholder="Đáp án 1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text fw-bold">B</span>
+                                    <input type="text" id="opt_1" class="form-control" placeholder="Đáp án 2" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text fw-bold">C</span>
+                                    <input type="text" id="opt_2" class="form-control" placeholder="Đáp án 3" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text fw-bold">D</span>
+                                    <input type="text" id="opt_3" class="form-control" placeholder="Đáp án 4" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label fw-bold text-success"><i class="fa-solid fa-circle-check me-1"></i> Đáp án đúng (Answer)</label>
+                            <select id="dynAnswer" class="form-select form-select-sm border-success">
+                                <option value="0">Đáp án A (Vị trí 0)</option>
+                                <option value="1">Đáp án B (Vị trí 1)</option>
+                                <option value="2">Đáp án C (Vị trí 2)</option>
+                                <option value="3">Đáp án D (Vị trí 3)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-bold text-primary"><i class="fa-solid fa-lightbulb me-1"></i> Lời giải thích / Đáp án chi tiết (Explanation)</label>
+                        <textarea id="dynExplanation" class="form-control form-control-sm" rows="3" placeholder="Nhập lời giải thích ngắn gọn lý do vì sao đáp án đó đúng..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="saveDynamicRow()"><i class="fa-solid fa-floppy-disk me-1"></i> Lưu Câu Hỏi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL XEM CHI TIẾT BÀI VIẾT -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h6 class="modal-title fw-bold" id="detailTitle">Chi Tiết Bài Viết</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="mb-3 bg-white p-2 rounded border d-flex align-items-center gap-3">
+                    <div><strong>Mã ID:</strong> <span id="detailID" class="badge bg-secondary"></span></div>
+                    <div><strong>Thư Mục:</strong> <span id="detailParent" class="badge bg-info text-dark"></span></div>
+                </div>
+                <div id="contentContainer"></div>
+            </div>
+            <div class="modal-footer bg-white">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL LIGHTBOX XEM ẢNH -->
+<div id="imageViewerModal" class="image-viewer-modal" onclick="closeImageViewer()">
+    <span class="image-viewer-close" onclick="closeImageViewer()">&times;</span>
+    <img id="imageViewerImg" class="image-viewer-content" src="" alt="Full Preview">
+</div>
+
+<!-- MODAL THÊM / CHỈNH SỬA BÀI VIẾT LƯU TRÌNH -->
+<div class="modal fade" id="docModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold" id="docModalTitle">Chỉnh Sửa Bài Viết Lưu Trình</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="docForm">
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Mã ID</label>
+                            <input type="text" id="docId" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Thư mục</label>
+                            <select id="docParent" class="form-select form-select-sm"></select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tiêu đề Lưu Trình</label>
+                        <input type="text" id="docLabel" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nội dung tổng quan</label>
+                        <textarea id="docContentText" class="form-control form-control-sm" rows="2" placeholder="Mô tả chữ..."></textarea>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <label class="form-label fw-bold text-primary mb-0"><i class="fa-solid fa-images me-1"></i>Khối Ảnh & Chú Thích</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary fw-bold" onclick="addNewImageBlock()"><i class="fa-solid fa-plus me-1"></i>Thêm Khối Mới</button>
+                    </div>
+                    <div id="imageBlocksContainer"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-sm btn-primary" onclick="saveDoc()">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ĐỔI MẬT KHẨU -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header"><h6 class="modal-title fw-bold"><i class="fa-solid fa-key me-1"></i>Đổi Mật Khẩu</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div id="passAlert" class="alert alert-danger py-1 d-none" style="font-size: 12px;"></div>
+                <div class="mb-2"><label class="form-label">Mật khẩu cũ</label><input type="password" id="oldPassInput" class="form-control form-control-sm" required></div>
+                <div class="mb-2"><label class="form-label">Mật khẩu mới</label><input type="password" id="newPassInput" class="form-control form-control-sm" required></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button><button type="button" class="btn btn-sm btn-primary" onclick="submitChangePassword()">Cập nhật</button></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const API_URL = '/api';
+    let rawDocsData = [];
+    let selectedFolder = '';
+    let currentConfig = {
+        theme: { bgType: 'color', bgColor: '#f4f6f9', bgUrl: '', primaryColor: '#1677ff', customCss: '' },
+        navItems: [
+            { id: 'luutrinh', name: 'LƯU TRÌNH', type: 'luutrinh', icon: 'fa-file-lines', customCss: '' },
+            { id: 'test', name: 'TEST SẢN PHẨM', type: 'table', icon: 'fa-vial-circle-check', customCss: '' }
+        ]
+    };
+    let activeTab = 'luutrinh';
+
+    const FOLDER_MAP = [
+        { id: 'main_gioithieu', name: 'Giới Thiệu Hướng Dẫn' },
+        { id: 'Slot_nohu', name: 'Test Game - Chạy Cược' },
+        { id: 'Bo_don', name: 'Hướng Dẫn Duyệt Đơn' },
+        { id: 'Bo_main', name: 'Hướng Dẫn Sử Dụng Bố' },
+        { id: 'main_casino', name: 'Casino Trực Tuyến' },
+        { id: 'main_xoso', name: 'Xổ Số Online' },
+        { id: 'main_thethao', name: 'Thể Thao' },
+        { id: 'main_daga', name: 'Đá Gà' },
+        { id: 'duyedon_main', name: 'Lưu Trình Duyệt Đơn' },
+        { id: 'xulyld_main', name: 'Xử Lý Hội Viên Gian Lận' },
+        { id: 'main', name: 'Liên Hệ Hỗ Trợ - Hướng Dẫn' }
+    ];
+
+    function getFolderName(folderId) {
+        const found = FOLDER_MAP.find(f => f.id === folderId);
+        return found ? found.name : folderId;
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        const token = localStorage.getItem("admin_token");
+        const username = localStorage.getItem("admin_username");
+        if (token && username) {
+            await fetchConfig();
+            showAdminDashboard(username);
+        }
+        document.addEventListener('keydown', (e) => { if (e.key === "Escape") closeImageViewer(); });
+    });
+
+    async function fetchConfig() {
+        try {
+            const res = await fetch(`${API_URL}/layout-config`);
+            if (res.ok) {
+                currentConfig = await res.json();
+            }
+            applyThemeStyles(currentConfig.theme);
+            renderNavbar();
+            renderNavItemsConfigTable();
+            populateConfigForm();
+        } catch(e) { console.error("Lỗi lấy cấu hình:", e); }
+    }
+
+    function applyThemeStyles(theme) {
+        if(!theme) return;
+        document.documentElement.style.setProperty('--nav-blue', theme.primaryColor || '#1677ff');
+    }
+
+    function renderNavbar() {
+        const container = document.getElementById('topNavContainer');
+        let html = `
+            <div class="nav-item-btn ${activeTab === 'giaodien' ? 'active' : ''}" onclick="switchTab('giaodien')">
+                <i class="fa-solid fa-palette"></i><span>GIAO DIỆN</span>
+            </div>
+        `;
+
+        currentConfig.navItems.forEach(item => {
+            html += `
+                <div class="nav-item-btn ${activeTab === item.id ? 'active' : ''}" onclick="switchTab('${item.id}')">
+                    <i class="fa-solid ${item.icon || 'fa-folder'}"></i><span>${item.name}</span>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        renderDynamicViews();
+    }
+
+    function renderDynamicViews() {
+        const container = document.getElementById('dynamicViewsContainer');
+        let html = '';
+
+        currentConfig.navItems.forEach(item => {
+            if (item.id === 'luutrinh') return;
+
+            if (item.type === 'table' || item.id === 'test' || item.id === 'testsanpham') {
+                html += `
+                    <div id="view-${item.id}" style="display: ${activeTab === item.id ? 'block' : 'none'};">
+                        <div class="action-bar mb-3 d-flex align-items-center justify-content-between">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-primary fw-bold" onclick="openDynamicRowModal('${item.id}')">
+                                    <i class="fa-solid fa-plus me-1"></i>Thêm câu hỏi mới
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="loadDynamicTableData('${item.id}')">
+                                    <i class="fa-solid fa-rotate me-1"></i>Làm mới
+                                </button>
+                            </div>
+                            
+                            <div>
+                                <input type="file" id="jsonFileInput_${item.id}" accept=".json" style="display: none;" onchange="handleImportJson(event, '${item.id}')">
+                                <button class="btn btn-sm btn-success fw-bold" onclick="document.getElementById('jsonFileInput_${item.id}').click()">
+                                    <i class="fa-solid fa-file-import me-1"></i>Nhập File JSON
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="custom-table-container">
+                            <table class="table-custom">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">STT</th>
+                                        <th style="width: 150px;">Danh mục</th>
+                                        <th style="width: 260px;">Câu hỏi</th>
+                                        <th>Cả 4 Đáp án</th>
+                                        <th style="width: 130px;">Đáp án đúng</th>
+                                        <th style="width: 200px;">Lời giải thích</th>
+                                        <th style="width: 110px;">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dyn_tbody_${item.id}">
+                                    <tr><td colspan="7" class="text-center text-muted">Đang tải dữ liệu...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        container.innerHTML = html;
+    }
+
+    async function handleImportJson(event, tabId) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const jsonData = JSON.parse(e.target.result);
+
+                if (!Array.isArray(jsonData)) {
+                    alert("File JSON không hợp lệ! Cấu trúc phải là một mảng [] danh sách các câu hỏi.");
+                    return;
+                }
+
+                const res = await fetch(`${API_URL}/dynamic-table/${tabId}/import`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(jsonData)
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert(`Đã cập nhật vĩnh viễn ${data.count || jsonData.length} câu hỏi vào hệ thống!`);
+                    loadDynamicTableData(tabId);
+                } else {
+                    alert("Có lỗi xảy ra: " + (data.message || "Lỗi không xác định"));
+                }
+            } catch (err) {
+                console.error("Lỗi đọc file JSON:", err);
+                alert("File JSON bị lỗi định dạng cấu trúc! Vui lòng kiểm tra lại.");
+            } finally {
+                event.target.value = '';
+            }
+        };
+
+        reader.readAsText(file, "UTF-8");
+    }
+
+    async function loadDynamicTableData(tabId) {
+        try {
+            const res = await fetch(`${API_URL}/dynamic-table/${tabId}`);
+            const list = res.ok ? await res.json() : [];
+            const tbody = document.getElementById(`dyn_tbody_${tabId}`);
+
+            if (!tbody) return;
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Chưa có câu hỏi nào. Bấm "Thêm câu hỏi mới" hoặc "Nhập File JSON" để tải dữ liệu.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = list.map((item, index) => {
+                const opts = Array.isArray(item.options) ? item.options : [item.optionA || '', item.optionB || '', item.optionC || '', item.optionD || ''];
+                const correctAnsIdx = parseInt(item.answer !== undefined ? item.answer : 0);
+                const optChar = ['A', 'B', 'C', 'D'][correctAnsIdx] || 'A';
+
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><span class="badge bg-secondary">${item.category || 'Chung'}</span><br><small class="text-muted">(${item.difficulty || 'Dễ'})</small></td>
+                        <td class="text-start fw-bold">${item.question || item.title || ''}</td>
+                        <td class="text-start" style="font-size: 11px;">
+                            <div>A: ${opts[0] || ''}</div>
+                            <div>B: ${opts[1] || ''}</div>
+                            <div>C: ${opts[2] || ''}</div>
+                            <div>D: ${opts[3] || ''}</div>
+                        </td>
+                        <td><span class="badge bg-success">${optChar}: ${opts[correctAnsIdx] || ''}</span></td>
+                        <td class="text-start text-muted" style="font-size: 11px;">${item.explanation || item.note || '-'}</td>
+                        <td>
+                            <span class="action-link" onclick='editDynamicRow("${tabId}", ${JSON.stringify(item)})'>Sửa</span>
+                            <span class="action-link delete" onclick="deleteDynamicRow('${tabId}', '${item.id}')">Xóa</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            console.error("Lỗi tải danh sách câu hỏi:", e);
+        }
+    }
+
+    function openDynamicRowModal(tabId) {
+        document.getElementById('dynTabId').value = tabId;
+        document.getElementById('dynRowId').value = Date.now();
+        document.getElementById('dynCategory').value = 'Kèo Châu Á (Asian Handicap)';
+        document.getElementById('dynDifficulty').value = 'Dễ';
+        document.getElementById('dynQuestion').value = '';
+        document.getElementById('opt_0').value = '';
+        document.getElementById('opt_1').value = '';
+        document.getElementById('opt_2').value = '';
+        document.getElementById('opt_3').value = '';
+        document.getElementById('dynAnswer').value = '0';
+        document.getElementById('dynExplanation').value = '';
+
+        const modal = new bootstrap.Modal(document.getElementById('dynamicRowModal'));
+        modal.show();
+    }
+
+    function editDynamicRow(tabId, item) {
+        document.getElementById('dynTabId').value = tabId;
+        document.getElementById('dynRowId').value = item.id;
+        document.getElementById('dynCategory').value = item.category || 'Chung';
+        document.getElementById('dynDifficulty').value = item.difficulty || 'Dễ';
+        document.getElementById('dynQuestion').value = item.question || item.title || '';
+
+        const opts = Array.isArray(item.options) ? item.options : [item.optionA || '', item.optionB || '', item.optionC || '', item.optionD || ''];
+        document.getElementById('opt_0').value = opts[0] || '';
+        document.getElementById('opt_1').value = opts[1] || '';
+        document.getElementById('opt_2').value = opts[2] || '';
+        document.getElementById('opt_3').value = opts[3] || '';
+
+        document.getElementById('dynAnswer').value = item.answer !== undefined ? item.answer : 0;
+        document.getElementById('dynExplanation').value = item.explanation || item.note || '';
+
+        const modal = new bootstrap.Modal(document.getElementById('dynamicRowModal'));
+        modal.show();
+    }
+
+    async function saveDynamicRow() {
+        const tabId = document.getElementById('dynTabId').value;
+        const body = {
+            id: document.getElementById('dynRowId').value,
+            category: document.getElementById('dynCategory').value.trim(),
+            difficulty: document.getElementById('dynDifficulty').value,
+            question: document.getElementById('dynQuestion').value.trim(),
+            options: [
+                document.getElementById('opt_0').value.trim(),
+                document.getElementById('opt_1').value.trim(),
+                document.getElementById('opt_2').value.trim(),
+                document.getElementById('opt_3').value.trim()
+            ],
+            answer: parseInt(document.getElementById('dynAnswer').value),
+            explanation: document.getElementById('dynExplanation').value.trim()
+        };
+
+        await fetch(`${API_URL}/dynamic-table/${tabId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        bootstrap.Modal.getInstance(document.getElementById('dynamicRowModal')).hide();
+        loadDynamicTableData(tabId);
+    }
+
+    async function deleteDynamicRow(tabId, rowId) {
+        if (confirm("Bạn có chắc muốn xóa câu hỏi này?")) {
+            await fetch(`${API_URL}/dynamic-table/${tabId}/${rowId}`, { method: 'DELETE' });
+            loadDynamicTableData(tabId);
+        }
+    }
+
+    function renderNavItemsConfigTable() {
+        const tbody = document.getElementById('navItemsTableBody');
+        tbody.innerHTML = currentConfig.navItems.map((item, index) => `
+            <tr>
+                <td><input type="text" class="form-control form-control-sm text-center cfg-nav-id" value="${item.id}" ${item.id === 'luutrinh' ? 'readonly' : ''}></td>
+                <td><input type="text" class="form-control form-control-sm cfg-nav-name text-center mx-auto" style="max-width: 130px;" value="${item.name}"></td>
+                <td>
+                    <select class="form-select form-select-sm cfg-nav-type" ${item.id === 'luutrinh' ? 'disabled' : ''}>
+                        <option value="luutrinh" ${item.type === 'luutrinh' ? 'selected' : ''}>Bài viết / Lưu trình</option>
+                        <option value="table" ${item.type === 'table' ? 'selected' : ''}>Bảng danh sách (Test...)</option>
+                    </select>
+                </td>
+                <td><input type="text" class="form-control form-control-sm cfg-nav-icon" value="${item.icon}"></td>
+                <td><textarea class="form-control form-control-sm cfg-nav-css font-monospace" rows="1" placeholder="Code CSS riêng...">${item.customCss || ''}</textarea></td>
+                <td>
+                    ${item.id !== 'luutrinh' ? `<button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="removeNavItem(${index})"><i class="fa-solid fa-trash"></i></button>` : '<span class="badge bg-secondary">Cố định</span>'}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function addNewNavItem() {
+        const newId = 'item_' + Date.now().toString().slice(-4);
+        currentConfig.navItems.push({ id: newId, name: 'MỤC MỚI', type: 'table', icon: 'fa-folder', customCss: '' });
+        renderNavItemsConfigTable();
+    }
+
+    function removeNavItem(index) {
+        currentConfig.navItems.splice(index, 1);
+        renderNavItemsConfigTable();
+    }
+
+    async function saveLayoutConfig() {
+        const ids = document.querySelectorAll('.cfg-nav-id');
+        const names = document.querySelectorAll('.cfg-nav-name');
+        const types = document.querySelectorAll('.cfg-nav-type');
+        const icons = document.querySelectorAll('.cfg-nav-icon');
+        const csses = document.querySelectorAll('.cfg-nav-css');
+
+        const updatedNavItems = [];
+        ids.forEach((el, idx) => {
+            updatedNavItems.push({
+                id: el.value.trim(),
+                name: names[idx].value.trim(),
+                type: types[idx].value,
+                icon: icons[idx].value.trim(),
+                customCss: csses[idx] ? csses[idx].value : ''
+            });
+        });
+
+        const bgType = document.getElementById('cfgBgType').value;
+        let bgUrl = document.getElementById('cfgBgUrl').value.trim();
+        if (bgType === 'file') {
+            bgUrl = document.getElementById('cfgBgFileUploadedUrl').value || currentConfig.theme.bgUrl;
+        }
+
+        const newConfig = {
+            theme: {
+                bgType: bgType,
+                bgColor: document.getElementById('cfgBgColor').value,
+                bgUrl: bgUrl,
+                primaryColor: document.getElementById('cfgPrimaryColor').value,
+                customCss: document.getElementById('cfgCustomCss').value
+            },
+            navItems: updatedNavItems
+        };
+
+        const res = await fetch(`${API_URL}/layout-config`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newConfig)
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("Đã lưu vĩnh viễn cấu hình giao diện!");
+            await fetchConfig();
+        }
+    }
+
+    function populateConfigForm() {
+        const t = currentConfig.theme || {};
+        document.getElementById('cfgPrimaryColor').value = t.primaryColor || '#1677ff';
+        document.getElementById('cfgBgType').value = t.bgType || 'color';
+        document.getElementById('cfgBgColor').value = t.bgColor || '#f4f6f9';
+        document.getElementById('cfgBgUrl').value = t.bgUrl || '';
+        document.getElementById('cfgCustomCss').value = t.customCss || '';
+        toggleBgInputs();
+    }
+
+    function toggleBgInputs() {
+        const type = document.getElementById('cfgBgType').value;
+        document.getElementById('bgOptionColor').classList.toggle('d-none', type !== 'color');
+        document.getElementById('bgOptionUrl').classList.toggle('d-none', type !== 'url');
+        document.getElementById('bgOptionFile').classList.toggle('d-none', type !== 'file');
+    }
+
+    async function handleUploadBgFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const res = await fetch('/api/upload-bg-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: event.target.result })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('cfgBgFileUploadedUrl').value = data.url;
+                alert("Đã upload ảnh nền thành công!");
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        const alertBox = document.getElementById('loginAlert');
+
+        const res = await fetch(`${API_URL}/admin/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            localStorage.setItem("admin_token", data.token);
+            localStorage.setItem("admin_username", data.username);
+            await fetchConfig();
+            showAdminDashboard(data.username);
+        } else {
+            alertBox.innerText = data.message;
+            alertBox.classList.remove('d-none');
+        }
+    }
+
+    function showAdminDashboard(username) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminMainScreen').style.display = 'block';
+        document.getElementById('displayAdminName').innerText = username.toUpperCase();
+        switchTab('luutrinh');
+        loadDocs();
+    }
+
+    function handleLogout() {
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_username");
+        location.reload();
+    }
+
+    function switchTab(tabName) {
+        activeTab = tabName;
+        renderNavbar();
+        
+        document.getElementById('view-giaodien').style.display = (tabName === 'giaodien') ? 'block' : 'none';
+        document.getElementById('view-luutrinh').style.display = (tabName === 'luutrinh') ? 'block' : 'none';
+
+        currentConfig.navItems.forEach(item => {
+            if (item.id !== 'luutrinh') {
+                const el = document.getElementById(`view-${item.id}`);
+                if (el) {
+                    el.style.display = (tabName === item.id) ? 'block' : 'none';
+                    if (tabName === item.id && (item.type === 'table' || item.id === 'test')) {
+                        loadDynamicTableData(item.id);
+                    }
+                }
+            }
+        });
+    }
+
+    async function loadDocs() {
+        try {
+            const res = await fetch(`${API_URL}/camnangad88`);
+            if (res.ok) {
+                rawDocsData = await res.json();
+                if (!selectedFolder && FOLDER_MAP.length > 0) selectedFolder = FOLDER_MAP[0].id;
+                renderFolderTabs();
+                renderDocTable();
+            }
+        } catch (e) { console.error("Lỗi tải lưu trình:", e); }
+    }
+
+    function renderFolderTabs() {
+        const container = document.getElementById('folderContainer');
+        container.innerHTML = FOLDER_MAP.map(f => `
+            <div class="folder-tab-btn ${selectedFolder === f.id ? 'active' : ''}" onclick="selectFolder('${f.id}')">
+                <i class="fa-solid fa-folder"></i>${f.name}
+            </div>
+        `).join('');
+    }
+
+    function selectFolder(fId) {
+        selectedFolder = fId;
+        renderFolderTabs();
+        renderDocTable();
+    }
+
+    function renderDocTable() {
+        const tbody = document.getElementById('docTableBody');
+        const list = rawDocsData.filter(d => (d.Parent || 'main') === selectedFolder);
+
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Không có bài viết trong thư mục này.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(item => `
+            <tr>
+                <td><span class="badge bg-secondary">${item.ID}</span></td>
+                <td><span class="clickable-title" onclick='openDetailModal(${JSON.stringify(item)})'>${item.Label || 'Chưa có tiêu đề'}</span></td>
+                <td><span class="badge bg-info text-dark">${getFolderName(item.Parent)}</span></td>
+                <td class="text-start text-muted">${(item.Content || '').substring(0, 80)}...</td>
+                <td>
+                    <span class="badge ${item.IsHidden ? 'bg-danger' : 'bg-success'}">${item.IsHidden ? 'Đang Ẩn' : 'Hiển Thị'}</span>
+                </td>
+                <td>
+                    <span class="action-link" onclick='openDocModal(${JSON.stringify(item)})'>Sửa</span>
+                    <span class="action-link ${item.IsHidden ? 'toggle-show' : 'toggle-hide'}" onclick="toggleHideDoc('${item.ID}')">${item.IsHidden ? 'Hiện' : 'Ẩn'}</span>
+                    <span class="action-link delete" onclick="deleteDoc('${item.ID}')">Xóa</span>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function openDetailModal(item) {
+        document.getElementById('detailTitle').innerText = item.Label || 'Chi tiết bài viết';
+        document.getElementById('detailID').innerText = item.ID;
+        document.getElementById('detailParent').innerText = getFolderName(item.Parent);
+
+        let html = '';
+        if (item.Content) {
+            html += `<div class="p-3 bg-white rounded border mb-3" style="white-space: pre-wrap;">${item.Content}</div>`;
+        }
+
+        if (item.File_Url) {
+            const urls = item.File_Url.split('|');
+            const caps = item.Image_Captions ? item.Image_Captions.split('|') : [];
+
+            urls.forEach((u, idx) => {
+                const url = u.trim();
+                if (!url) return;
+                html += `
+                    <div class="content-block-item">
+                        <img src="${url}" class="block-img" onclick="openImageViewer('${url}')">
+                        <div class="block-text">${caps[idx] || ''}</div>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById('contentContainer').innerHTML = html;
+        const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+        modal.show();
+    }
+
+    function openDocModal(doc = null) {
+        const select = document.getElementById('docParent');
+        select.innerHTML = FOLDER_MAP.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+
+        const container = document.getElementById('imageBlocksContainer');
+        container.innerHTML = '';
+
+        if (doc) {
+            document.getElementById('docModalTitle').innerText = "Chỉnh Sửa Bài Viết Lưu Trình";
+            document.getElementById('docId').value = doc.ID;
+            document.getElementById('docId').readOnly = true;
+            document.getElementById('docParent').value = doc.Parent || FOLDER_MAP[0].id;
+            document.getElementById('docLabel').value = doc.Label || '';
+            document.getElementById('docContentText').value = doc.Content || '';
+
+            if (doc.File_Url) {
+                const urls = doc.File_Url.split('|');
+                const caps = doc.Image_Captions ? doc.Image_Captions.split('|') : [];
+                urls.forEach((u, i) => addNewImageBlock(u.trim(), caps[i] || ''));
+            }
+        } else {
+            document.getElementById('docModalTitle').innerText = "Thêm Bài Viết Lưu Trình Mới";
+            document.getElementById('docId').value = 'DOC_' + Date.now().toString().slice(-4);
+            document.getElementById('docId').readOnly = false;
+            document.getElementById('docParent').value = selectedFolder || FOLDER_MAP[0].id;
+            document.getElementById('docLabel').value = '';
+            document.getElementById('docContentText').value = '';
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('docModal'));
+        modal.show();
+    }
+
+    function addNewImageBlock(url = '', caption = '') {
+        const container = document.getElementById('imageBlocksContainer');
+        const blockId = 'img_block_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
+        const div = document.createElement('div');
+        div.className = 'card p-2 mb-2 bg-light border';
+        div.id = blockId;
+        div.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <small class="fw-bold text-secondary">Khối hình ảnh & ghi chú</small>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" onclick="document.getElementById('${blockId}').remove()"><i class="fa-solid fa-xmark"></i> Xóa</button>
+            </div>
+            <input type="text" class="form-control form-control-sm mb-1 img-block-url" placeholder="URL hình ảnh (https://...)" value="${url}">
+            <textarea class="form-control form-control-sm img-block-cap" rows="2" placeholder="Chú thích ảnh...">${caption}</textarea>
+        `;
+        container.appendChild(div);
+    }
+
+    async function saveDoc() {
+        const id = document.getElementById('docId').value.trim();
+        const parent = document.getElementById('docParent').value;
+        const label = document.getElementById('docLabel').value.trim();
+        const content = document.getElementById('docContentText').value.trim();
+
+        const urlInputs = document.querySelectorAll('.img-block-url');
+        const capInputs = document.querySelectorAll('.img-block-cap');
+
+        const urls = [];
+        const caps = [];
+
+        urlInputs.forEach((input, i) => {
+            if (input.value.trim() !== '') {
+                urls.push(input.value.trim());
+                caps.push(capInputs[i].value.trim());
+            }
+        });
+
+        const body = {
+            ID: id,
+            Parent: parent,
+            Label: label,
+            Content: content,
+            File_Url: urls.join('|'),
+            Image_Captions: caps.join('|')
+        };
+
+        const res = await fetch(`${API_URL}/camnangad88`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (res.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('docModal')).hide();
+            await loadDocs();
+        }
+    }
+
+    async function toggleHideDoc(id) {
+        await fetch(`${API_URL}/camnangad88/${id}/toggle-hide`, { method: 'PATCH' });
+        loadDocs();
+    }
+
+    async function deleteDoc(id) {
+        if (confirm("Bạn có chắc muốn xóa bài viết này?")) {
+            await fetch(`${API_URL}/camnangad88/${id}`, { method: 'DELETE' });
+            loadDocs();
+        }
+    }
+
+    async function submitChangePassword() {
+        const oldPassword = document.getElementById('oldPassInput').value;
+        const newPassword = document.getElementById('newPassInput').value;
+        const username = localStorage.getItem('admin_username');
+
+        const res = await fetch(`${API_URL}/admin/change-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, oldPassword, newPassword })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert("Đổi mật khẩu thành công!");
+            bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+        } else {
+            const alertBox = document.getElementById('passAlert');
+            alertBox.innerText = data.message;
+            alertBox.classList.remove('d-none');
+        }
+    }
+
+    function openImageViewer(url) {
+        document.getElementById('imageViewerImg').src = url;
+        document.getElementById('imageViewerModal').classList.add('active');
+    }
+
+    function closeImageViewer() {
+        document.getElementById('imageViewerModal').classList.remove('active');
+    }
+</script>
+</body>
+</html>
