@@ -44,7 +44,7 @@
         .admin-hover-btn:hover { background-color: var(--nav-hover); }
         .admin-dropdown-menu {
             display: none; position: absolute; top: 100%; right: 0; background: white;
-            min-width: 190px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 0 0 6px 6px; overflow: hidden; z-index: 1000;
+            min-width: 220px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 0 0 6px 6px; overflow: hidden; z-index: 1000;
         }
         .admin-dropdown-container:hover .admin-dropdown-menu { display: block; }
         .admin-dropdown-item { padding: 10px 16px; color: #333; text-decoration: none; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; }
@@ -145,6 +145,9 @@
             <div class="admin-dropdown-menu">
                 <div class="admin-dropdown-item text-primary fw-bold" id="btnMenuCreateUser" data-bs-toggle="modal" data-bs-target="#createUserModal">
                     <i class="fa-solid fa-user-plus"></i> Tạo tài khoản mới
+                </div>
+                <div class="admin-dropdown-item text-success fw-bold" id="btnMenuManageUsers" onclick="openUserListModal()">
+                    <i class="fa-solid fa-users-gear"></i> Quản lý tài khoản
                 </div>
                 <div class="admin-dropdown-item" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                     <i class="fa-solid fa-key text-secondary"></i> Đổi mật khẩu
@@ -248,6 +251,93 @@
 
         <!-- CONTAINER CHO CÁC MỤC ĐỘNG -->
         <div id="dynamicViewsContainer"></div>
+    </div>
+</div>
+
+<!-- MODAL QUẢN LÝ DANH SÁCH TÀI KHOẢN CẤP DƯỚI (DÀNH CHO HILOAD88) -->
+<div class="modal fade" id="userListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h6 class="modal-title fw-bold"><i class="fa-solid fa-users-gear me-2"></i>Quản Lý Danh Sách Tài Khoản Cấp Dưới</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle text-center" style="font-size: 12px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tên Tài Khoản</th>
+                                <th>Vai Trò</th>
+                                <th>Quyền Thao Tác</th>
+                                <th style="width: 160px;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userListTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SỬA TÀI KHOẢN & PHÂN QUYỀN (HILOAD88) -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h6 class="modal-title fw-bold"><i class="fa-solid fa-user-pen me-2"></i>Chỉnh Sửa Tài Khoản Cấp Dưới</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" onsubmit="handleUpdateUser(event)">
+                    <input type="hidden" id="editUsernameTarget">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tài khoản</label>
+                        <input type="text" id="editUsernameDisplay" class="form-control form-control-sm bg-light" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mật khẩu mới (Bỏ trống nếu không đổi)</label>
+                        <input type="password" id="editUserPassword" class="form-control form-control-sm" placeholder="Nhập mật khẩu mới...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-primary"><i class="fa-solid fa-user-gear me-1"></i>Cập Nhật Quyền Thao Tác</label>
+                        <div class="card p-2 bg-light border perm-checkbox-group">
+                            <div class="form-check mb-1">
+                                <input class="form-check-input edit-perm-cb" type="checkbox" value="edit" id="edit_perm_edit">
+                                <label class="form-check-label" for="edit_perm_edit"><strong>Quyền Sửa (edit)</strong></label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input edit-perm-cb" type="checkbox" value="add_new" id="edit_perm_add_new">
+                                <label class="form-check-label" for="edit_perm_add_new"><strong>Quyền Thêm Mới (add_new)</strong></label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input edit-perm-cb" type="checkbox" value="delete" id="edit_perm_delete">
+                                <label class="form-check-label text-danger" for="edit_perm_delete"><strong>Quyền Xóa (delete)</strong></label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input edit-perm-cb" type="checkbox" value="toggle_hide" id="edit_perm_toggle_hide">
+                                <label class="form-check-label text-warning" for="edit_perm_toggle_hide"><strong>Quyền Ẩn/Hiện (toggle_hide)</strong></label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input edit-perm-cb" type="checkbox" value="import_json" id="edit_perm_import_json">
+                                <label class="form-check-label text-success" for="edit_perm_import_json"><strong>Quyền Import JSON (import_json)</strong></label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input edit-perm-cb" type="checkbox" value="config_ui" id="edit_perm_config_ui">
+                                <label class="form-check-label text-primary" for="edit_perm_config_ui"><strong>Quyền Cấu Hình Giao Diện (config_ui)</strong></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-primary fw-bold"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu Cập Nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -489,6 +579,7 @@
 <script>
     const API_URL = '/api';
     let rawDocsData = [];
+    let cachedUsersList = [];
     let selectedFolder = '';
     let userPermissions = []; // Mảng danh sách quyền của tài khoản hiện tại
     let currentConfig = {
@@ -519,10 +610,9 @@
         return found ? found.name : folderId;
     }
 
-    // Hàm kiểm tra quyền thao tác
     function hasPerm(permKey) {
         const username = (localStorage.getItem("admin_username") || "").toLowerCase();
-        if (username === 'hiload88') return true; // Hiload88 luôn có full quyền
+        if (username === 'hiload88') return true;
         return userPermissions.includes(permKey);
     }
 
@@ -564,7 +654,6 @@
         const container = document.getElementById('topNavContainer');
         let html = '';
 
-        // Hiển thị tab GIAO DIỆN nếu có quyền config_ui
         if (hasPerm('config_ui')) {
             html += `
                 <div class="nav-item-btn ${activeTab === 'giaodien' ? 'active' : ''}" onclick="switchTab('giaodien')">
@@ -677,13 +766,11 @@
         const isMasterAdmin = (username.toLowerCase() === 'hiload88');
         document.getElementById('displayAdminName').innerText = isMasterAdmin ? `HILOAD88 (ADMIN TỐI CAO)` : username.toUpperCase();
         
-        // Cấu hình hiển thị nút Tạo tài khoản: RÀNG BUỘC CHỈ DUY NHẤT HILOAD88 MỚI THẤY & SỬ DỤNG ĐƯỢC
         const menuCreateUser = document.getElementById('btnMenuCreateUser');
-        if (menuCreateUser) {
-            menuCreateUser.style.display = isMasterAdmin ? 'flex' : 'none';
-        }
+        const menuManageUsers = document.getElementById('btnMenuManageUsers');
+        if (menuCreateUser) menuCreateUser.style.display = isMasterAdmin ? 'flex' : 'none';
+        if (menuManageUsers) menuManageUsers.style.display = isMasterAdmin ? 'flex' : 'none';
 
-        // Cập nhật ẩn/hiện nút Thêm bài viết mới ở tab Lưu trình theo quyền add_new
         const btnAddNewDoc = document.querySelector('.btn-perm-add_new');
         if (btnAddNewDoc) {
             btnAddNewDoc.style.display = hasPerm('add_new') ? 'inline-block' : 'none';
@@ -698,7 +785,108 @@
         location.reload();
     }
 
-    // Xử lý Tạo Tài Khoản Mới & Phân Quyền Chi Tiết (Chỉ HILOAD88 thực hiện)
+    /* =========================================================
+       QUẢN LÝ TÀI KHOẢN DÀNH CHO HILOAD88
+       ========================================================= */
+
+    async function openUserListModal() {
+        try {
+            const res = await fetch(`${API_URL}/users`);
+            if (res.ok) {
+                cachedUsersList = await res.json();
+                renderUserList();
+                const modal = new bootstrap.Modal(document.getElementById('userListModal'));
+                modal.show();
+            }
+        } catch (e) {
+            alert("Lỗi khi tải danh sách người dùng!");
+        }
+    }
+
+    function renderUserList() {
+        const tbody = document.getElementById('userListTableBody');
+        tbody.innerHTML = cachedUsersList.map(u => `
+            <tr>
+                <td class="fw-bold">${u.username} ${u.username.toLowerCase() === 'hiload88' ? '<span class="badge bg-danger">Tối Cao</span>' : ''}</td>
+                <td><span class="badge ${u.role === 'admin' ? 'bg-primary' : 'bg-secondary'}">${u.role}</span></td>
+                <td class="text-start" style="font-size: 11px;">
+                    ${(u.permissions || []).map(p => `<span class="badge bg-light text-dark border me-1">${p}</span>`).join('')}
+                </td>
+                <td>
+                    ${u.username.toLowerCase() !== 'hiload88' ? `
+                        <button class="btn btn-sm btn-outline-primary py-0 me-1" onclick='openEditUserModal(${JSON.stringify(u)})'><i class="fa-solid fa-pen-to-square"></i> Sửa</button>
+                        <button class="btn btn-sm btn-outline-danger py-0" onclick="deleteUser('${u.username}')"><i class="fa-solid fa-trash"></i> Xóa</button>
+                    ` : '<span class="text-muted">Không thể sửa/xóa</span>'}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function openEditUserModal(user) {
+        document.getElementById('editUsernameTarget').value = user.username;
+        document.getElementById('editUsernameDisplay').value = user.username;
+        document.getElementById('editUserPassword').value = '';
+
+        document.querySelectorAll('.edit-perm-cb').forEach(cb => {
+            cb.checked = (user.permissions || []).includes(cb.value);
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        modal.show();
+    }
+
+    async function handleUpdateUser(e) {
+        e.preventDefault();
+        const currentUser = localStorage.getItem("admin_username");
+        const username = document.getElementById('editUsernameTarget').value;
+        const password = document.getElementById('editUserPassword').value;
+
+        const checkedPerms = [];
+        document.querySelectorAll('.edit-perm-cb:checked').forEach(cb => checkedPerms.push(cb.value));
+
+        try {
+            const res = await fetch(`${API_URL}/users/${username}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentUser, password, permissions: checkedPerms })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Đã cập nhật thông tin tài khoản!");
+                bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                openUserListModal();
+            } else {
+                alert(data.message);
+            }
+        } catch (err) {
+            alert("Lỗi kết nối máy chủ!");
+        }
+    }
+
+    async function deleteUser(username) {
+        if (!confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${username}"?`)) return;
+
+        const currentUser = localStorage.getItem("admin_username");
+        try {
+            const res = await fetch(`${API_URL}/users/${username}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentUser })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Đã xóa tài khoản vĩnh viễn!");
+                openUserListModal();
+            } else {
+                alert(data.message);
+            }
+        } catch (err) {
+            alert("Lỗi khi kết nối xóa tài khoản!");
+        }
+    }
+
     async function handleCreateUser(e) {
         e.preventDefault();
         const currentUser = localStorage.getItem("admin_username");
@@ -713,17 +901,12 @@
             const res = await fetch(`${API_URL}/users`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    currentUser, 
-                    username, 
-                    password, 
-                    permissions: checkedPerms 
-                })
+                body: JSON.stringify({ currentUser, username, password, permissions: checkedPerms })
             });
             const data = await res.json();
 
             if (data.success) {
-                alert("Tạo tài khoản và phân quyền thao tác thành công!");
+                alert("Tạo tài khoản và phân quyền thành công!");
                 document.getElementById('createUserForm').reset();
                 alertBox.classList.add('d-none');
                 bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
@@ -736,6 +919,10 @@
             alertBox.classList.remove('d-none');
         }
     }
+
+    /* =========================================================
+       XỬ LÝ CHUYỂN TAB & DỮ LIỆU
+       ========================================================= */
 
     function switchTab(tabName) {
         activeTab = tabName;

@@ -202,6 +202,56 @@ app.post('/api/users', (req, res) => {
     return res.json({ success: true, message: "Tạo tài khoản và phân quyền thành công!" });
 });
 
+// API Chỉnh sửa thông tin/mật khẩu/quyền người dùng (Chỉ hiload88)
+app.put('/api/users/:username', (req, res) => {
+    const { currentUser, password, permissions } = req.body;
+    const { username } = req.params;
+
+    if (!currentUser || currentUser.toLowerCase() !== 'hiload88') {
+        return res.status(403).json({ success: false, message: "Chỉ tài khoản tối cao (hiload88) mới được phép chỉnh sửa!" });
+    }
+
+    const userIndex = usersData.findIndex(u => u.username.toLowerCase() === username.toLowerCase());
+    if (userIndex === -1) {
+        return res.json({ success: false, message: "Không tìm thấy tài khoản!" });
+    }
+
+    if (password) {
+        usersData[userIndex].password = password;
+    }
+    if (Array.isArray(permissions)) {
+        usersData[userIndex].permissions = permissions;
+        usersData[userIndex].role = permissions.includes('config_ui') ? 'admin' : 'custom';
+    }
+
+    writeJsonFile(USERS_FILE, usersData);
+    return res.json({ success: true, message: "Cập nhật tài khoản thành công!" });
+});
+
+// API Xóa tài khoản người dùng (Chỉ hiload88)
+app.delete('/api/users/:username', (req, res) => {
+    const { currentUser } = req.body;
+    const { username } = req.params;
+
+    if (!currentUser || currentUser.toLowerCase() !== 'hiload88') {
+        return res.status(403).json({ success: false, message: "Chỉ tài khoản tối cao (hiload88) mới được phép xóa tài khoản!" });
+    }
+
+    if (username.toLowerCase() === 'hiload88') {
+        return res.json({ success: false, message: "Không thể xóa tài khoản Tối Cao hiload88!" });
+    }
+
+    const initialLength = usersData.length;
+    usersData = usersData.filter(u => u.username.toLowerCase() !== username.toLowerCase());
+
+    if (usersData.length < initialLength) {
+        writeJsonFile(USERS_FILE, usersData);
+        return res.json({ success: true, message: "Đã xóa tài khoản vĩnh viễn!" });
+    }
+
+    return res.json({ success: false, message: "Không tìm thấy tài khoản để xóa!" });
+});
+
 /* =========================================================
    2. API QUẢN LÝ DỮ LIỆU CÂU HỎI & GIAO DIỆN TRẮC NGHIỆM (QUIZ)
    ========================================================= */
