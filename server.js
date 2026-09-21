@@ -23,10 +23,22 @@ const CONFIG_FILE = path.join(__dirname, 'layout-config.json');
 const QUIZ_HTML_FILE = path.join(__dirname, 'public', 'quiz_client.html');
 const USERS_FILE = path.join(__dirname, 'users.json');
 
-// Cấu hình danh sách người dùng mặc định
+// Cấu hình danh sách người dùng mặc định (Mặc định tài khoản tối cao hiload88)
 const DEFAULT_USERS = [
-    { username: "hiload88", password: "long1995", role: "admin", name: "HILOAD88" },
-    { username: "nhanvien1", password: "123", role: "staff", name: "Nhân Viên 1" }
+    { 
+        username: "hiload88", 
+        password: "long1995", 
+        role: "admin", 
+        name: "HILOAD88 (Admin Tối Cao)",
+        permissions: ["edit", "delete", "toggle_hide", "add_folder", "add_question", "config_ui"]
+    },
+    { 
+        username: "nhanvien1", 
+        password: "123", 
+        role: "staff", 
+        name: "Nhân Viên 1",
+        permissions: ["edit"]
+    }
 ];
 
 // Cấu hình mặc định hệ thống
@@ -112,7 +124,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'client.h
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* =========================================================
-   1. API QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG & ĐĂNG NHẬP
+   1. API QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG & ĐĂNG NHẬP (PHÂN QUYỀN)
    ========================================================= */
 
 // API Đăng nhập
@@ -125,6 +137,7 @@ app.post('/api/admin/login', (req, res) => {
             success: true, 
             username: user.username, 
             role: user.role || 'staff',
+            permissions: user.permissions || [], // Trả về danh sách quyền chi tiết
             token: "mock-token-" + Date.now() 
         });
     }
@@ -146,12 +159,25 @@ app.post('/api/admin/change-password', (req, res) => {
 
 // API Lấy danh sách người dùng
 app.get('/api/users', (req, res) => {
-    res.json(usersData.map(u => ({ username: u.username, role: u.role, name: u.name || u.username })));
+    res.json(usersData.map(u => ({ 
+        username: u.username, 
+        role: u.role, 
+        permissions: u.permissions || [], 
+        name: u.name || u.username 
+    })));
 });
 
-// API Tạo / Cập nhật tài khoản người dùng
+// API Tạo tài khoản người dùng (Ràng buộc CHỈ hiload88 MỚI ĐƯỢC PHÉP TẠO)
 app.post('/api/users', (req, res) => {
-    const { username, password, role } = req.body;
+    const { currentUser, username, password, role, permissions } = req.body;
+
+    // Ràng buộc bảo mật ở Backend: Chỉ duy nhất tài khoản 'hiload88' mới có quyền khởi tạo
+    if (!currentUser || currentUser.toLowerCase() !== 'hiload88') {
+        return res.status(403).json({ 
+            success: false, 
+            message: "Quyền truy cập bị từ chối! Chỉ tài khoản tối cao (hiload88) mới có quyền tạo tài khoản." 
+        });
+    }
 
     if (!username || !password) {
         return res.json({ success: false, message: "Vui lòng nhập Tên tài khoản và Mật khẩu!" });
@@ -165,7 +191,8 @@ app.post('/api/users', (req, res) => {
     const newUser = {
         username: username,
         password: password,
-        role: role || 'staff',
+        role: role || 'custom',
+        permissions: Array.isArray(permissions) ? permissions : [],
         name: username
     };
 
@@ -404,5 +431,6 @@ app.delete('/api/camnangad88/:id', (req, res) => {
     res.json({ success: true, message: "Đã xóa thành công!" });
 });
 
+// Chạy Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server AD88 đang chạy tại http://localhost:${PORT}`));
