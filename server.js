@@ -30,12 +30,12 @@ const DEFAULT_USERS = [
         password: "long1995", 
         role: "admin", 
         name: "HILOAD88 (Admin Tối Cao)",
-        permissions: ["edit", "delete", "toggle_hide", "add_folder", "add_question", "config_ui"]
+        permissions: ["edit", "delete", "toggle_hide", "add_new", "import_json", "config_ui"]
     },
     { 
         username: "nhanvien1", 
         password: "123", 
-        role: "staff", 
+        role: "custom", 
         name: "Nhân Viên 1",
         permissions: ["edit"]
     }
@@ -124,7 +124,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'client.h
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* =========================================================
-   1. API QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG & ĐĂNG NHẬP (PHÂN QUYỀN)
+   1. API QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG & ĐĂNG NHẬP (PHÂN QUYỀN CHI TIẾT)
    ========================================================= */
 
 // API Đăng nhập
@@ -136,8 +136,8 @@ app.post('/api/admin/login', (req, res) => {
         return res.json({ 
             success: true, 
             username: user.username, 
-            role: user.role || 'staff',
-            permissions: user.permissions || [], // Trả về danh sách quyền chi tiết
+            role: user.role || 'custom',
+            permissions: user.permissions || [], // Trả về mảng danh sách quyền thao tác
             token: "mock-token-" + Date.now() 
         });
     }
@@ -167,7 +167,7 @@ app.get('/api/users', (req, res) => {
     })));
 });
 
-// API Tạo tài khoản người dùng (Ràng buộc CHỈ hiload88 MỚI ĐƯỢC PHÉP TẠO)
+// API Tạo tài khoản người dùng & Phân quyền thao tác (Ràng buộc CHỈ hiload88 MỚI ĐƯỢC PHÉP TẠO)
 app.post('/api/users', (req, res) => {
     const { currentUser, username, password, role, permissions } = req.body;
 
@@ -191,7 +191,7 @@ app.post('/api/users', (req, res) => {
     const newUser = {
         username: username,
         password: password,
-        role: role || 'custom',
+        role: role || (Array.isArray(permissions) && permissions.includes('config_ui') ? 'admin' : 'custom'),
         permissions: Array.isArray(permissions) ? permissions : [],
         name: username
     };
@@ -199,7 +199,7 @@ app.post('/api/users', (req, res) => {
     usersData.push(newUser);
     writeJsonFile(USERS_FILE, usersData);
 
-    return res.json({ success: true, message: "Tạo tài khoản mới thành công!" });
+    return res.json({ success: true, message: "Tạo tài khoản và phân quyền thành công!" });
 });
 
 /* =========================================================

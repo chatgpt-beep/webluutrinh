@@ -100,6 +100,7 @@
         .image-viewer-modal.active { display: flex; }
         .image-viewer-content { max-width: 90%; max-height: 90%; border-radius: 6px; box-shadow: 0 5px 25px rgba(0,0,0,0.5); object-fit: contain; }
         .image-viewer-close { position: absolute; top: 20px; right: 35px; color: #fff; font-size: 35px; font-weight: bold; cursor: pointer; }
+        .perm-checkbox-group label { cursor: pointer; user-select: none; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -156,7 +157,7 @@
     </div>
 
     <div class="content-body">
-        <!-- TAB GIAO DIỆN -->
+        <!-- TAB GIAO DIỆN (YÊU CẦU QUYỀN config_ui TRÊN BACKEND) -->
         <div id="view-giaodien" style="display: none;">
             <div class="card p-3 mb-3 shadow-sm">
                 <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-palette me-2"></i>1. Tùy Chỉnh Nền & Màu Sắc Frontend</h6>
@@ -222,7 +223,7 @@
         <!-- TAB LƯU TRÌNH (CẤU TRÚC 1) -->
         <div id="view-luutrinh" style="display: none;">
             <div class="action-bar">
-                <button class="btn btn-sm btn-primary" onclick="openDocModal()"><i class="fa-solid fa-plus me-1"></i>Thêm bài viết lưu trình mới</button>
+                <button class="btn btn-sm btn-primary btn-perm-add_new" onclick="openDocModal()"><i class="fa-solid fa-plus me-1"></i>Thêm bài viết lưu trình mới</button>
                 <button class="btn btn-sm btn-outline-secondary" onclick="loadDocs()"><i class="fa-solid fa-rotate me-1"></i>Làm mới</button>
             </div>
 
@@ -250,12 +251,12 @@
     </div>
 </div>
 
-<!-- MODAL TẠO TÀI KHOẢN MỚI -->
+<!-- MODAL TẠO TÀI KHOẢN MỚI CHỈ DÀNH CHO HILOAD88 NÂNG CẤP CHI TIẾT QUYỀN -->
 <div class="modal fade" id="createUserModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h6 class="modal-title fw-bold"><i class="fa-solid fa-user-plus me-2"></i>Tạo Tài Khoản Người Dùng Mới</h6>
+                <h6 class="modal-title fw-bold"><i class="fa-solid fa-user-plus me-2"></i>Tạo Tài Khoản & Phân Quyền Chi Tiết</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -269,16 +270,40 @@
                         <label class="form-label fw-bold">Mật khẩu</label>
                         <input type="password" id="newPassword" class="form-control form-control-sm" placeholder="Nhập mật khẩu..." required>
                     </div>
+
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Quyền hạn (Role)</label>
-                        <select id="newRole" class="form-select form-select-sm" required>
-                            <option value="staff">Nhân viên (Staff - Bị ẩn tab Giao diện)</option>
-                            <option value="admin">Quản trị viên (Admin - Full quyền)</option>
-                        </select>
+                        <label class="form-label fw-bold text-primary"><i class="fa-solid fa-user-gear me-1"></i>Danh Sách Quyền Thao Tác Chi Tiết</label>
+                        <div class="card p-2 bg-light border perm-checkbox-group">
+                            <div class="form-check mb-1">
+                                <input class="form-check-input perm-cb" type="checkbox" value="edit" id="perm_edit" checked>
+                                <label class="form-check-label" for="perm_edit"><strong>Quyền Sửa (edit):</strong> Cho phép sửa câu hỏi, bài viết</label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input perm-cb" type="checkbox" value="add_new" id="perm_add_new" checked>
+                                <label class="form-check-label" for="perm_add_new"><strong>Quyền Thêm Mới (add_new):</strong> Tạo mới câu hỏi, bài viết</label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input perm-cb" type="checkbox" value="delete" id="perm_delete">
+                                <label class="form-check-label text-danger" for="perm_delete"><strong>Quyền Xóa (delete):</strong> Xóa bỏ nội dung vĩnh viễn</label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input perm-cb" type="checkbox" value="toggle_hide" id="perm_toggle_hide" checked>
+                                <label class="form-check-label text-warning" for="perm_toggle_hide"><strong>Quyền Ẩn/Hiện (toggle_hide):</strong> Thay đổi trạng thái bài viết</label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input perm-cb" type="checkbox" value="import_json" id="perm_import_json">
+                                <label class="form-check-label text-success" for="perm_import_json"><strong>Quyền Import JSON (import_json):</strong> Nhập dữ liệu hàng loạt</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input perm-cb" type="checkbox" value="config_ui" id="perm_config_ui">
+                                <label class="form-check-label text-primary" for="perm_config_ui"><strong>Quyền Cấu Hình Giao Diện (config_ui):</strong> Tùy chỉnh màu sắc, menu Frontend</label>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="text-end mt-3">
                         <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-sm btn-primary fw-bold"><i class="fa-solid fa-check me-1"></i>Tạo Tài Khoản</button>
+                        <button type="submit" class="btn btn-sm btn-primary fw-bold"><i class="fa-solid fa-check me-1"></i>Khởi Tạo Tài Khoản</button>
                     </div>
                 </form>
             </div>
@@ -465,6 +490,7 @@
     const API_URL = '/api';
     let rawDocsData = [];
     let selectedFolder = '';
+    let userPermissions = []; // Mảng danh sách quyền của tài khoản hiện tại
     let currentConfig = {
         theme: { bgType: 'color', bgColor: '#f4f6f9', bgUrl: '', primaryColor: '#1677ff', customCss: '' },
         navItems: [
@@ -493,10 +519,22 @@
         return found ? found.name : folderId;
     }
 
+    // Hàm kiểm tra quyền thao tác
+    function hasPerm(permKey) {
+        const username = (localStorage.getItem("admin_username") || "").toLowerCase();
+        if (username === 'hiload88') return true; // Hiload88 luôn có full quyền
+        return userPermissions.includes(permKey);
+    }
+
     document.addEventListener("DOMContentLoaded", async () => {
         const token = localStorage.getItem("admin_token");
         const username = localStorage.getItem("admin_username");
-        const role = localStorage.getItem("admin_role") || "staff";
+        const role = localStorage.getItem("admin_role") || "custom";
+        
+        try {
+            userPermissions = JSON.parse(localStorage.getItem("admin_permissions") || "[]");
+        } catch(e) { userPermissions = []; }
+
         if (token && username) {
             await fetchConfig();
             showAdminDashboard(username, role);
@@ -524,11 +562,10 @@
 
     function renderNavbar() {
         const container = document.getElementById('topNavContainer');
-        const role = localStorage.getItem("admin_role") || "staff";
         let html = '';
 
-        // Chỉ Admin mới có tab GIAO DIỆN
-        if (role === 'admin') {
+        // Hiển thị tab GIAO DIỆN nếu có quyền config_ui
+        if (hasPerm('config_ui')) {
             html += `
                 <div class="nav-item-btn ${activeTab === 'giaodien' ? 'active' : ''}" onclick="switchTab('giaodien')">
                     <i class="fa-solid fa-palette"></i><span>GIAO DIỆN</span>
@@ -560,19 +597,21 @@
                     <div id="view-${item.id}" style="display: ${activeTab === item.id ? 'block' : 'none'};">
                         <div class="action-bar mb-3 d-flex align-items-center justify-content-between">
                             <div class="d-flex gap-2">
+                                ${hasPerm('add_new') ? `
                                 <button class="btn btn-sm btn-primary fw-bold" onclick="openDynamicRowModal('${item.id}')">
                                     <i class="fa-solid fa-plus me-1"></i>Thêm câu hỏi mới
-                                </button>
+                                </button>` : ''}
                                 <button class="btn btn-sm btn-outline-secondary" onclick="loadDynamicTableData('${item.id}')">
                                     <i class="fa-solid fa-rotate me-1"></i>Làm mới
                                 </button>
                             </div>
                             
                             <div>
+                                ${hasPerm('import_json') ? `
                                 <input type="file" id="jsonFileInput_${item.id}" accept=".json" style="display: none;" onchange="handleImportJson(event, '${item.id}')">
                                 <button class="btn btn-sm btn-success fw-bold" onclick="document.getElementById('jsonFileInput_${item.id}').click()">
                                     <i class="fa-solid fa-file-import me-1"></i>Nhập File JSON
-                                </button>
+                                </button>` : ''}
                             </div>
                         </div>
 
@@ -618,9 +657,13 @@
         if (data.success) {
             localStorage.setItem("admin_token", data.token);
             localStorage.setItem("admin_username", data.username);
-            localStorage.setItem("admin_role", data.role || 'staff');
+            localStorage.setItem("admin_role", data.role || 'custom');
+            
+            userPermissions = data.permissions || [];
+            localStorage.setItem("admin_permissions", JSON.stringify(userPermissions));
+
             await fetchConfig();
-            showAdminDashboard(data.username, data.role || 'staff');
+            showAdminDashboard(data.username, data.role || 'custom');
         } else {
             alertBox.innerText = data.message;
             alertBox.classList.remove('d-none');
@@ -631,44 +674,56 @@
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminMainScreen').style.display = 'block';
         
-        const displayRole = (role || localStorage.getItem("admin_role") || "staff").toUpperCase();
-        document.getElementById('displayAdminName').innerText = `${username.toUpperCase()} (${displayRole})`;
+        const isMasterAdmin = (username.toLowerCase() === 'hiload88');
+        document.getElementById('displayAdminName').innerText = isMasterAdmin ? `HILOAD88 (ADMIN TỐI CAO)` : username.toUpperCase();
         
-        // Cấu hình hiển thị nút Tạo tài khoản
+        // Cấu hình hiển thị nút Tạo tài khoản: RÀNG BUỘC CHỈ DUY NHẤT HILOAD88 MỚI THẤY & SỬ DỤNG ĐƯỢC
         const menuCreateUser = document.getElementById('btnMenuCreateUser');
         if (menuCreateUser) {
-            menuCreateUser.style.display = (displayRole === 'ADMIN') ? 'flex' : 'none';
+            menuCreateUser.style.display = isMasterAdmin ? 'flex' : 'none';
         }
 
-        switchTab(displayRole === 'ADMIN' ? 'giaodien' : 'luutrinh');
+        // Cập nhật ẩn/hiện nút Thêm bài viết mới ở tab Lưu trình theo quyền add_new
+        const btnAddNewDoc = document.querySelector('.btn-perm-add_new');
+        if (btnAddNewDoc) {
+            btnAddNewDoc.style.display = hasPerm('add_new') ? 'inline-block' : 'none';
+        }
+
+        switchTab(hasPerm('config_ui') ? 'giaodien' : 'luutrinh');
         loadDocs();
     }
 
     function handleLogout() {
-        localStorage.removeItem("admin_token");
-        localStorage.removeItem("admin_username");
-        localStorage.removeItem("admin_role");
+        localStorage.clear();
         location.reload();
     }
 
-    // Xử lý Tạo Tài Khoản Mới
+    // Xử lý Tạo Tài Khoản Mới & Phân Quyền Chi Tiết (Chỉ HILOAD88 thực hiện)
     async function handleCreateUser(e) {
         e.preventDefault();
+        const currentUser = localStorage.getItem("admin_username");
         const username = document.getElementById('newUsername').value.trim();
         const password = document.getElementById('newPassword').value;
-        const role = document.getElementById('newRole').value;
         const alertBox = document.getElementById('createUserAlert');
+
+        const checkedPerms = [];
+        document.querySelectorAll('.perm-cb:checked').forEach(cb => checkedPerms.push(cb.value));
 
         try {
             const res = await fetch(`${API_URL}/users`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, role })
+                body: JSON.stringify({ 
+                    currentUser, 
+                    username, 
+                    password, 
+                    permissions: checkedPerms 
+                })
             });
             const data = await res.json();
 
             if (data.success) {
-                alert("Tạo tài khoản người dùng thành công!");
+                alert("Tạo tài khoản và phân quyền thao tác thành công!");
                 document.getElementById('createUserForm').reset();
                 alertBox.classList.add('d-none');
                 bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
@@ -706,6 +761,11 @@
     }
 
     async function handleImportJson(event, tabId) {
+        if (!hasPerm('import_json')) {
+            alert("Tài khoản của bạn không được phân quyền Import JSON!");
+            return;
+        }
+
         const file = event.target.files[0];
         if (!file) return;
 
@@ -774,8 +834,9 @@
                         <td><span class="badge bg-success">${optChar}: ${opts[correctAnsIdx] || ''}</span></td>
                         <td class="text-start text-muted" style="font-size: 11px;">${item.explanation || item.note || '-'}</td>
                         <td>
-                            <span class="action-link" onclick='editDynamicRow("${tabId}", ${JSON.stringify(item)})'>Sửa</span>
-                            <span class="action-link delete" onclick="deleteDynamicRow('${tabId}', '${item.id}')">Xóa</span>
+                            ${hasPerm('edit') ? `<span class="action-link" onclick='editDynamicRow("${tabId}", ${JSON.stringify(item)})'>Sửa</span>` : ''}
+                            ${hasPerm('delete') ? `<span class="action-link delete" onclick="deleteDynamicRow('${tabId}', '${item.id}')">Xóa</span>` : ''}
+                            ${!hasPerm('edit') && !hasPerm('delete') ? '<span class="text-muted" style="font-size: 10px;">Chỉ xem</span>' : ''}
                         </td>
                     </tr>
                 `;
@@ -786,6 +847,11 @@
     }
 
     function openDynamicRowModal(tabId) {
+        if (!hasPerm('add_new')) {
+            alert("Tài khoản của bạn không được phân quyền Thêm Mới!");
+            return;
+        }
+
         document.getElementById('dynTabId').value = tabId;
         document.getElementById('dynRowId').value = Date.now();
         document.getElementById('dynCategory').value = 'Kèo Châu Á (Asian Handicap)';
@@ -803,6 +869,11 @@
     }
 
     function editDynamicRow(tabId, item) {
+        if (!hasPerm('edit')) {
+            alert("Tài khoản của bạn không được phân quyền Chỉnh Sửa!");
+            return;
+        }
+
         document.getElementById('dynTabId').value = tabId;
         document.getElementById('dynRowId').value = item.id;
         document.getElementById('dynCategory').value = item.category || 'Chung';
@@ -850,6 +921,11 @@
     }
 
     async function deleteDynamicRow(tabId, rowId) {
+        if (!hasPerm('delete')) {
+            alert("Tài khoản của bạn không có quyền Xóa!");
+            return;
+        }
+
         if (confirm("Bạn có chắc muốn xóa câu hỏi này?")) {
             await fetch(`${API_URL}/dynamic-table/${tabId}/${rowId}`, { method: 'DELETE' });
             loadDynamicTableData(tabId);
@@ -889,6 +965,11 @@
     }
 
     async function saveLayoutConfig() {
+        if (!hasPerm('config_ui')) {
+            alert("Tài khoản của bạn không được phân quyền Tùy chỉnh Giao diện!");
+            return;
+        }
+
         const ids = document.querySelectorAll('.cfg-nav-id');
         const names = document.querySelectorAll('.cfg-nav-name');
         const types = document.querySelectorAll('.cfg-nav-type');
@@ -1018,9 +1099,10 @@
                     <span class="badge ${item.IsHidden ? 'bg-danger' : 'bg-success'}">${item.IsHidden ? 'Đang Ẩn' : 'Hiển Thị'}</span>
                 </td>
                 <td>
-                    <span class="action-link" onclick='openDocModal(${JSON.stringify(item)})'>Sửa</span>
-                    <span class="action-link ${item.IsHidden ? 'toggle-show' : 'toggle-hide'}" onclick="toggleHideDoc('${item.ID}')">${item.IsHidden ? 'Hiện' : 'Ẩn'}</span>
-                    <span class="action-link delete" onclick="deleteDoc('${item.ID}')">Xóa</span>
+                    ${hasPerm('edit') ? `<span class="action-link" onclick='openDocModal(${JSON.stringify(item)})'>Sửa</span>` : ''}
+                    ${hasPerm('toggle_hide') ? `<span class="action-link ${item.IsHidden ? 'toggle-show' : 'toggle-hide'}" onclick="toggleHideDoc('${item.ID}')">${item.IsHidden ? 'Hiện' : 'Ẩn'}</span>` : ''}
+                    ${hasPerm('delete') ? `<span class="action-link delete" onclick="deleteDoc('${item.ID}')">Xóa</span>` : ''}
+                    ${!hasPerm('edit') && !hasPerm('toggle_hide') && !hasPerm('delete') ? '<span class="text-muted" style="font-size: 10px;">Chỉ xem</span>' : ''}
                 </td>
             </tr>
         `).join('');
@@ -1058,6 +1140,15 @@
     }
 
     function openDocModal(doc = null) {
+        if (doc && !hasPerm('edit')) {
+            alert("Tài khoản của bạn không được phân quyền Sửa bài viết!");
+            return;
+        }
+        if (!doc && !hasPerm('add_new')) {
+            alert("Tài khoản của bạn không được phân quyền Thêm mới bài viết!");
+            return;
+        }
+
         const select = document.getElementById('docParent');
         select.innerHTML = FOLDER_MAP.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 
@@ -1149,11 +1240,21 @@
     }
 
     async function toggleHideDoc(id) {
+        if (!hasPerm('toggle_hide')) {
+            alert("Tài khoản của bạn không có quyền Ẩn/Hiện bài viết!");
+            return;
+        }
+
         await fetch(`${API_URL}/camnangad88/${id}/toggle-hide`, { method: 'PATCH' });
         loadDocs();
     }
 
     async function deleteDoc(id) {
+        if (!hasPerm('delete')) {
+            alert("Tài khoản của bạn không có quyền Xóa!");
+            return;
+        }
+
         if (confirm("Bạn có chắc muốn xóa bài viết này?")) {
             await fetch(`${API_URL}/camnangad88/${id}`, { method: 'DELETE' });
             loadDocs();
