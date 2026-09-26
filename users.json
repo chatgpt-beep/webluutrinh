@@ -1,0 +1,25 @@
+[
+  {
+    "username": "hiload88",
+    "password": "long1995",
+    "role": "admin",
+    "name": "HILOAD88 (Admin Tối Cao)",
+    "permissions": [
+      "edit",
+      "delete",
+      "toggle_hide",
+      "add_new",
+      "import_json",
+      "config_ui"
+    ]
+  },
+  {
+    "username": "nhanvien1",
+    "password": "123",
+    "role": "custom",
+    "name": "Nhân Viên 1",
+    "permissions": [
+      "edit"
+    ]
+  }
+]
